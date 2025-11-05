@@ -1,10 +1,11 @@
-import { Search, Download, Smartphone, TrendingUp, Calendar, MapPin, Phone, Mail, Facebook, Instagram, Twitter } from 'lucide-react';
+import { Download, Smartphone, TrendingUp, Calendar, MapPin, Phone, Mail, Facebook, Instagram, Twitter } from 'lucide-react';
 import { SimpleChatBot } from './SimpleChatBot';
 import { AnalyticsAIChatbot } from './AnalyticsAIChatbot';
 import { PWAInstallPrompt } from './PWAInstallPrompt';
 import { usePWAInstall } from '../hooks/usePWAInstall';
-import { useState } from 'react';
+import { useState, type MouseEvent } from 'react';
 import { savePendingBooking } from '../utils/bookingStorage';
+import { type PlanType } from './OnboardingPaymentScreen';
 import '../styles/components/redesigned-landing.css';
 import '../styles/components/analytics-chatbot.css';
 import '../styles/components/pwa-install.css';
@@ -12,13 +13,15 @@ import '../styles/components/pwa-install.css';
 interface LandingPageProps {
   onGetStarted: () => void;
   onLogin: () => void;
+  onStartOnboarding?: (planType: PlanType) => void;
 }
 
-export function RedesignedLandingPage({ onGetStarted, onLogin }: LandingPageProps) {
+export function RedesignedLandingPage({ onGetStarted, onLogin, onStartOnboarding }: LandingPageProps) {
   const { install: installPWA, isInstalled } = usePWAInstall();
   const [showAndroidModal, setShowAndroidModal] = useState(false);
   const [showIOSModal, setShowIOSModal] = useState(false);
   const [showBookingModal, setShowBookingModal] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   
   // Booking form state
   const [bookingData, setBookingData] = useState({
@@ -34,6 +37,30 @@ export function RedesignedLandingPage({ onGetStarted, onLogin }: LandingPageProp
   // Calendar state
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
+
+  const handleNavClick = (event: MouseEvent<HTMLAnchorElement>, targetId: string) => {
+    event.preventDefault();
+    const targetElement = document.getElementById(targetId);
+    if (targetElement) {
+      targetElement.scrollIntoView({ behavior: 'smooth' });
+    }
+  };
+
+  const handleLoginClick = () => {
+    setIsLoading(true);
+    setTimeout(() => {
+      setIsLoading(false);
+      onLogin();
+    }, 300);
+  };
+
+  const handleSignUpClick = () => {
+    setIsLoading(true);
+    setTimeout(() => {
+      setIsLoading(false);
+      onGetStarted();
+    }, 300);
+  };
 
   const handleAndroidDownload = () => {
     setShowAndroidModal(true);
@@ -211,6 +238,13 @@ export function RedesignedLandingPage({ onGetStarted, onLogin }: LandingPageProp
 
   return (
     <div className="redesigned-landing-page">
+      {/* Loading Overlay */}
+      {isLoading && (
+        <div className="loading-overlay">
+          <div className="loading-spinner"></div>
+        </div>
+      )}
+      
       {/* PWA Install Prompt */}
       <PWAInstallPrompt />
       
@@ -218,35 +252,77 @@ export function RedesignedLandingPage({ onGetStarted, onLogin }: LandingPageProp
       <header className="redesigned-header">
         <div className="header-container">
           <div className="logo-section">
-            <img 
-              src="/images/GlamQueue-Header-Logo.png" 
-              alt="GlamQueue Logo" 
+            <img
+              src="/images/GlamQueue-Header-Logo.png"
+              alt="GlamQueue Logo"
               className="logo-image"
             />
           </div>
-          
-          <nav>
+
+          <nav className="main-nav">
             <ul className="nav-menu">
-              <li><a href="#services" className="nav-link">Services</a></li>
-              <li><a href="#pricing" className="nav-link">Pricing</a></li>
-              <li><a href="#about" className="nav-link">About</a></li>
-              <li><a href="#contact" className="nav-link">Contact</a></li>
+              <li className="nav-item">
+                <a
+                  href="#hero"
+                  className="nav-link"
+                  onClick={(event) => handleNavClick(event, 'hero')}
+                >
+                  <span>Home</span>
+                </a>
+              </li>
+              <li className="nav-item">
+                <a
+                  href="#about"
+                  className="nav-link"
+                  onClick={(event) => handleNavClick(event, 'about')}
+                >
+                  <span>About</span>
+                </a>
+              </li>
+              <li className="nav-item">
+                <a
+                  href="#services"
+                  className="nav-link"
+                  onClick={(event) => handleNavClick(event, 'services')}
+                >
+                  <span>Services</span>
+                </a>
+              </li>
+              <li className="nav-item">
+                <a
+                  href="#pricing"
+                  className="nav-link"
+                  onClick={(event) => handleNavClick(event, 'pricing')}
+                >
+                  <span>Pricing</span>
+                </a>
+              </li>
+              <li className="nav-item">
+                <a
+                  href="#contact"
+                  className="nav-link"
+                  onClick={(event) => handleNavClick(event, 'contact')}
+                >
+                  <span>Contact</span>
+                </a>
+              </li>
             </ul>
           </nav>
-          
+
           <div className="header-actions">
-            <button className="search-btn">
-              <Search size={20} />
-            </button>
-            <button className="login-btn" onClick={onLogin}>
+
+            <button className="header-link-btn" onClick={handleLoginClick} disabled={isLoading}>
               Login
+            </button>
+            <button className="login-btn" onClick={handleSignUpClick} disabled={isLoading}>
+              Sign Up
             </button>
           </div>
         </div>
       </header>
 
       {/* Hero Section */}
-      <section className="hero-section">
+      <section className="hero-section" id="hero">
         <div className="hero-container">
           <div className="hero-content">
             <h1 className="hero-title">
@@ -257,7 +333,7 @@ export function RedesignedLandingPage({ onGetStarted, onLogin }: LandingPageProp
               delight your customers, and grow your business with GlamQueue.
             </p>
             <div className="hero-cta">
-              <button className="primary-btn" onClick={onGetStarted}>
+              <button className="primary-btn" onClick={handleSignUpClick} disabled={isLoading}>
                 Book Now!
               </button>
               <button className="secondary-btn">
@@ -275,53 +351,90 @@ export function RedesignedLandingPage({ onGetStarted, onLogin }: LandingPageProp
         </div>
       </section>
 
-      {/* Pricing Section */}
-      <section className="pricing-section" id="pricing">
-        <div className="pricing-container">
-          <h2 className="section-title">Simple. Transparent Plans</h2>
-          <p className="section-subtitle">
-            Start free for 14-days. Cancel Anytime.
-          </p>
-          
-          <div className="pricing-grid">
-            <div className="pricing-card">
-              <h3 className="plan-name">Freemium</h3>
-              <div className="plan-price">₱0</div>
-              <div className="plan-period">for 14 days</div>
-              <ul className="plan-features">
-                <li className="plan-feature">All Pro features for 14 days</li>
-                <li className="plan-feature">No credit card required</li>
-                <li className="plan-feature">Cancel Anytime.</li>
-              </ul>
-              <button className="pricing-btn">Start Free Trial</button>
+      {/* About Section */}
+      <section className="about-section" id="about">
+        <div className="about-container">
+          <div className="about-content">
+            <span className="section-eyebrow">About GlamQueue</span>
+            <h2 className="about-title">We build salon experiences that clients remember</h2>
+            <p className="about-description">
+              GlamQueue combines human care with intelligent automation so your team can
+              focus on delivering luxurious treatments. From easy booking flows to live
+              performance dashboards, we give your brand everything it needs to grow with
+              confidence.
+            </p>
+
+            <div className="about-highlights">
+              <div className="about-highlight">
+                <h3>Purpose-built platform</h3>
+                <p>
+                  Streamlined workflows for stylists, front desk teams, and managers.
+                  Customize the experience for every branch and service line.
+                </p>
+              </div>
+              <div className="about-highlight">
+                <h3>Guided partnership</h3>
+                <p>
+                  From onboarding to expansion, our success managers ensure your salon
+                  leverages every feature and sees results fast.
+                </p>
+              </div>
             </div>
-            
-            <div className="pricing-card featured">
-              <h3 className="plan-name">Pro</h3>
-              <div className="plan-price">₱1,499</div>
-              <div className="plan-period">per month</div>
-              <ul className="plan-features">
-                <li className="plan-feature">100 Appointments per day</li>
-                <li className="plan-feature">Client CRM & loyalty tools</li>
-                <li className="plan-feature">AI scheduling & chatbot</li>
-                <li className="plan-feature">Multibranch support</li>
-                <li className="plan-feature">Advanced analytics</li>
-              </ul>
-              <button className="pricing-btn">Get Pro</button>
+
+            <div className="about-stats">
+              <div className="about-stat">
+                <span className="about-stat-number">120+</span>
+                <span className="about-stat-label">Salons scaling with GlamQueue</span>
+              </div>
+              <div className="about-stat">
+                <span className="about-stat-number">4.9/5</span>
+                <span className="about-stat-label">Average customer satisfaction</span>
+              </div>
             </div>
-            
-            <div className="pricing-card">
-              <h3 className="plan-name">Enterprise</h3>
-              <div className="plan-price">Custom Pricing</div>
-              <div className="plan-period">billed annually</div>
-              <ul className="plan-features">
-                <li className="plan-feature">Unlimited appointments</li>
-                <li className="plan-feature">Dedicated success manager</li>
-                <li className="plan-feature">SLA & priority support</li>
-                <li className="plan-feature">Custom integrations</li>
-                <li className="plan-feature">Security review & SSO</li>
-              </ul>
-              <button className="pricing-btn">Contact Sales</button>
+
+            <div className="about-actions">
+              <button 
+                className="primary-btn" 
+                onClick={() => onStartOnboarding ? onStartOnboarding('free-trial') : handleSignUpClick()} 
+                disabled={isLoading}
+              >
+                Start Free Trial
+              </button>
+              <button
+                className="about-link-btn"
+                type="button"
+                onClick={() => document.getElementById('contact')?.scrollIntoView({ behavior: 'smooth' })}
+              >
+                Talk to our team
+              </button>
+            </div>
+          </div>
+
+          <div className="about-visual">
+            <div className="about-visual-card">
+              <span className="about-visual-eyebrow">Partner Spotlight</span>
+              <p className="about-visual-quote">
+                “We filled our weekday slots and doubled recurring memberships in just three months.”
+              </p>
+              <div className="about-visual-meta">
+                <span className="about-visual-name">Glow &amp; Co. Studios</span>
+                <span className="about-visual-role">5-branch salon collective</span>
+              </div>
+            </div>
+
+            <div className="about-visual-grid">
+              <div className="about-stat-box">
+                <span className="box-value">+32%</span>
+                <span className="box-label">Repeat visits</span>
+              </div>
+              <div className="about-stat-box">
+                <span className="box-value">2×</span>
+                <span className="box-label">Faster check-ins</span>
+              </div>
+              <div className="about-stat-box">
+                <span className="box-value">6 weeks</span>
+                <span className="box-label">Average launch time</span>
+              </div>
             </div>
           </div>
         </div>
@@ -403,6 +516,76 @@ export function RedesignedLandingPage({ onGetStarted, onLogin }: LandingPageProp
                 Help customers find your salon with integrated maps 
                 and location-based features.
               </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Pricing Section */}
+      <section className="pricing-section" id="pricing">
+        <div className="pricing-container">
+          <h2 className="section-title">Simple. Transparent Plans</h2>
+          <p className="section-subtitle">
+            Start free for 14-days. Cancel Anytime.
+          </p>
+          
+          <div className="pricing-grid">
+            <div className="pricing-card">
+              <h3 className="plan-name">Freemium</h3>
+              <div className="plan-price">₱0</div>
+              <div className="plan-period">for 14 days</div>
+              <ul className="plan-features">
+                <li className="plan-feature">All Pro features for 14 days</li>
+                <li className="plan-feature">No credit card required</li>
+                <li className="plan-feature">Cancel Anytime.</li>
+              </ul>
+              <button 
+                className="pricing-btn" 
+                onClick={() => onStartOnboarding ? onStartOnboarding('free-trial') : handleSignUpClick()} 
+                disabled={isLoading}
+              >
+                Start Free Trial
+              </button>
+            </div>
+            
+            <div className="pricing-card featured">
+              <h3 className="plan-name">Pro</h3>
+              <div className="plan-price">₱1,499</div>
+              <div className="plan-period">per month</div>
+              <ul className="plan-features">
+                <li className="plan-feature">100 Appointments per day</li>
+                <li className="plan-feature">Client CRM & loyalty tools</li>
+                <li className="plan-feature">AI scheduling & chatbot</li>
+                <li className="plan-feature">Multibranch support</li>
+                <li className="plan-feature">Advanced analytics</li>
+              </ul>
+              <button 
+                className="pricing-btn" 
+                onClick={() => onStartOnboarding ? onStartOnboarding('pro') : handleSignUpClick()} 
+                disabled={isLoading}
+              >
+                Get Pro
+              </button>
+            </div>
+            
+            <div className="pricing-card">
+              <h3 className="plan-name">Enterprise</h3>
+              <div className="plan-price">Custom Pricing</div>
+              <div className="plan-period">billed annually</div>
+              <ul className="plan-features">
+                <li className="plan-feature">Unlimited appointments</li>
+                <li className="plan-feature">Dedicated success manager</li>
+                <li className="plan-feature">SLA & priority support</li>
+                <li className="plan-feature">Custom integrations</li>
+                <li className="plan-feature">Security review & SSO</li>
+              </ul>
+              <button 
+                className="pricing-btn" 
+                onClick={() => onStartOnboarding ? onStartOnboarding('enterprise') : handleSignUpClick()} 
+                disabled={isLoading}
+              >
+                Contact Sales
+              </button>
             </div>
           </div>
         </div>
@@ -800,3 +983,4 @@ export function RedesignedLandingPage({ onGetStarted, onLogin }: LandingPageProp
     </div>
   );
 }
+
