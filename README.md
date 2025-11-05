@@ -1,6 +1,6 @@
 # GlamQueue
 
-Live Demo: https://glam-queue-web.vercel.app
+Live Demo: https://glamqueue.vercel.app
 
 A modern, responsive landing page and salon management platform built with React, TypeScript, and Vite.
 
