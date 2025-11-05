@@ -13,15 +13,11 @@ import {
   Line,
   BarChart,
   Bar,
-  PieChart as RePieChart,
-  Pie,
-  Cell,
   XAxis,
   YAxis,
   CartesianGrid,
   Tooltip,
   ResponsiveContainer,
-  Legend,
 } from 'recharts';
 import { getAnalyticsData, type AnalyticsData } from '../../api/admin';
 

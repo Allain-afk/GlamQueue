@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Calendar, Clock, Search, Filter, ChevronDown, Eye, Check, X, MoreHorizontal } from 'lucide-react';
+import { Calendar, Clock, Search, Filter, Eye, Check, X, MoreHorizontal } from 'lucide-react';
 import { getAllAppointments, type AppointmentWithDetails } from '../../api/admin';
 import { adminUpdateBookingStatus } from '../../api/bookings';
 

@@ -206,7 +206,7 @@ export async function sendMessageToGemini(
         generationConfig: {
           temperature: 0.7,
           topK: 40,
-          topP: 0.95,
+          topP: 0.95, 
           maxOutputTokens: 300, // Reduced for shorter responses
         },
       }),
