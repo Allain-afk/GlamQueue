@@ -143,6 +143,47 @@ export default defineConfig({
       '@': path.resolve(__dirname, './src'),
     },
   },
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks(id) {
+          // Split node_modules into vendor chunks
+          if (id.includes('node_modules')) {
+            // React core libraries
+            if (id.includes('react') || id.includes('react-dom') || id.includes('react-router')) {
+              return 'react-vendor';
+            }
+            // Recharts (heavy charting library ~200KB)
+            if (id.includes('recharts')) {
+              return 'recharts-vendor';
+            }
+            // Supabase
+            if (id.includes('@supabase')) {
+              return 'supabase-vendor';
+            }
+            // Radix UI components
+            if (id.includes('@radix-ui')) {
+              return 'ui-vendor';
+            }
+            // Lucide icons
+            if (id.includes('lucide-react')) {
+              return 'icons-vendor';
+            }
+            // Other vendor libraries
+            return 'vendor';
+          }
+          // Split admin screens into separate chunks
+          if (id.includes('/admin/screens/')) {
+            const screenName = id.split('/admin/screens/')[1]?.split('.')[0];
+            if (screenName) {
+              return `admin-${screenName}`;
+            }
+          }
+        },
+      },
+    },
+    chunkSizeWarningLimit: 600, // Increase warning threshold slightly
+  },
   server: {
     port: 3000,
     open: true
