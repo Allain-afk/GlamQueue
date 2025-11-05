@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { RedesignedLandingPage } from './components/RedesignedLandingPage';
 import { AdminLogin } from './admin/components/AdminLogin';
 import { OtpVerification } from './admin/components/OtpVerification';
-import { AdminDashboard } from './admin/components/AdminDashboard';
+import { NewAdminDashboard } from './admin/components/NewAdminDashboard';
 import { ClientApp } from './client/ClientApp';
 import { AuthProvider } from './auth/AuthContext';
 import { useAuth } from './auth/useAuth';
@@ -132,7 +132,7 @@ function AppContent() {
     
     case 'admin-dashboard':
       return (
-        <AdminDashboard 
+        <NewAdminDashboard 
           onLogout={handleLogout}
         />
       );

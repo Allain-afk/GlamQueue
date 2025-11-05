@@ -38,7 +38,7 @@ export function UserManagement() {
     }
   };
 
-  const handleRoleChange = async (userId: string, newRole: string) => {
+  const handleRoleChange = async (userId: string, newRole: User['role']) => {
     try {
       const { error } = await supabase
         .from('profiles')
@@ -50,7 +50,7 @@ export function UserManagement() {
       setUsers(prev => 
         prev.map(user => 
           user.id === userId 
-            ? { ...user, role: newRole as any }
+            ? { ...user, role: newRole }
             : user
         )
       );
@@ -205,7 +205,7 @@ export function UserManagement() {
                     <div className="flex items-center space-x-2">
                       <select
                         value={user.role}
-                        onChange={(e) => handleRoleChange(user.id, e.target.value)}
+                        onChange={(e) => handleRoleChange(user.id, e.target.value as User['role'])}
                         className="text-xs border border-gray-300 rounded px-2 py-1 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                       >
                         <option value="client">Client</option>

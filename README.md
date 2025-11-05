@@ -54,6 +54,7 @@ Required environment variables:
 
 - `VITE_SUPABASE_URL` - Your Supabase project URL
 - `VITE_SUPABASE_ANON_KEY` - Your Supabase anonymous key
+- `VITE_GEMINI_API_KEY` - Your GEMINI API key
 
 See `.env.example` for reference.
 
@@ -83,4 +84,5 @@ Private - All rights reserved
 ---
 
 Built with ❤️ for salon owners everywhere
+
 # GlamQueue
