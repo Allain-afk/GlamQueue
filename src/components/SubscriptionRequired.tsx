@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { CreditCard, AlertCircle, CheckCircle, Clock } from 'lucide-react';
+import { CreditCard, AlertCircle, CheckCircle } from 'lucide-react';
 import { useAuth } from '../auth/useAuth';
 import { checkSubscriptionAccess, type SubscriptionAccess } from '../api/subscriptions';
 import '../styles/components/subscription-required.css';

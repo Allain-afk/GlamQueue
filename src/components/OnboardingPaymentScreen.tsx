@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import { ArrowLeft, Check, CreditCard, Lock, Shield, User, Mail, Phone, Building } from 'lucide-react';
-import { useAuth } from '../auth/useAuth';
 import { supabase } from '../lib/supabase';
 import { createSubscriptionFromOnboarding, createPaymentRecord } from '../api/subscriptions';
 import '../styles/components/onboarding-payment.css';
@@ -69,7 +68,6 @@ const planDetails = {
 };
 
 export function OnboardingPaymentScreen({ planType, onBack, onComplete }: OnboardingPaymentScreenProps) {
-  const { session } = useAuth();
   const [currentStep, setCurrentStep] = useState<1 | 2 | 3>(1);
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState<string | null>(null);
