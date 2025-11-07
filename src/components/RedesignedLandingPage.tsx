@@ -68,13 +68,13 @@ export function RedesignedLandingPage({ onGetStarted, onLogin, onStartOnboarding
 
   const handleAPKDownload = () => {
     // Replace this URL with your actual APK download link
-    const apkDownloadUrl = 'https://your-domain.com/downloads/glamqueue-app.apk';
+    const apkDownloadUrl = 'https://github.com/Allain-afk/GlamQueue/releases/download/v1.0.0/app-release.apk';
     window.open(apkDownloadUrl, '_blank');
   };
 
   const handleCopyDownloadLink = () => {
     // Replace this URL with your actual APK download link
-    const apkDownloadUrl = 'https://your-domain.com/downloads/glamqueue-app.apk';
+    const apkDownloadUrl = 'https://github.com/Allain-afk/GlamQueue/releases/download/v1.0.0/app-release.apk';
     navigator.clipboard.writeText(apkDownloadUrl).then(() => {
       alert('Download link copied to clipboard!');
     }).catch(() => {
@@ -891,10 +891,10 @@ export function RedesignedLandingPage({ onGetStarted, onLogin, onStartOnboarding
                 </ol>
                 <div className="download-buttons">
                   <button className="download-btn primary" onClick={handleAPKDownload}>
-                    📥 Download APK (MB) - COMING SOON...
+                    📥 Download APK (MB)
                   </button>
                   <button className="download-btn secondary" onClick={handleCopyDownloadLink}>
-                    📋 Copy Download Link - COMING SOON...
+                    📋 Copy Download Link
                   </button>
                 </div>
                 <p className="download-note">
