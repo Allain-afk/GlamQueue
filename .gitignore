@@ -31,6 +31,17 @@ supabase-shops-services-setup.sql
 supabase-subscriptions-setup.sql
 supabase-subscription-helpers.sql
 supabase-profiles-rls-fix.sql
+supabase-bookings-fresh-start.sql
+supabase-bookings-migration.sql
+supabase-bookings-quick-fix.sql
+supabase-bookings-setup.sql
+supabase-bookings-type-fix.sql
+supabase-create-manager-staff-accounts.sql
+supabase-check-manager-staff-status.sql
+supabase-seed-services-shops.sql
+supabase-update-shops-to-cebu.sql
+supabase-verify-all-profiles.sql
+supabase-fix-manager-staff-roles.sql
 
 # Logs
 logs

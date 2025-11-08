@@ -128,16 +128,21 @@ export function AdminLogin({ onLoginSuccess, onClientLogin, onBackToLanding, onN
           return;
         }
 
-        if (profile.role !== 'admin') {
-          // Redirect clients to client app instead of showing error
+        // Handle different roles
+        if (profile.role === 'admin') {
+          console.log('Admin login successful!');
+          onLoginSuccess(profile);
+        } else if (profile.role === 'manager' || profile.role === 'staff') {
+          // Managers and staff also use onLoginSuccess which will route them correctly
+          console.log(`${profile.role} login successful!`);
+          onLoginSuccess(profile);
+        } else {
+          // Redirect clients to client app
           console.log(`User with role '${profile.role}' logged in, redirecting to client app...`);
           setLoading(false);
           onClientLogin();
           return;
         }
-
-        console.log('Admin login successful!');
-        onLoginSuccess(profile);
       }
     } catch (err) {
       console.error('Auth error:', err);

@@ -14,9 +14,11 @@ import './index.css';
 
 // Lazy load heavy components for code splitting
 const NewAdminDashboard = lazy(() => import('./admin/components/NewAdminDashboard').then(module => ({ default: module.NewAdminDashboard })));
+const ManagerDashboard = lazy(() => import('./manager/components/ManagerDashboard').then(module => ({ default: module.ManagerDashboard })));
+const StaffDashboard = lazy(() => import('./staff/components/StaffDashboard').then(module => ({ default: module.StaffDashboard })));
 const ClientApp = lazy(() => import('./client/ClientApp').then(module => ({ default: module.ClientApp })));
 
-type AppState = 'landing' | 'login' | 'otp-verification' | 'admin-dashboard' | 'client-app' | 'onboarding' | 'subscription-required';
+type AppState = 'landing' | 'login' | 'otp-verification' | 'admin-dashboard' | 'manager-dashboard' | 'staff-dashboard' | 'client-app' | 'onboarding' | 'subscription-required';
 
 function AppContent() {
   const [appState, setAppState] = useState<AppState>('landing');
@@ -88,6 +90,57 @@ function AppContent() {
     }
   }, [session]);
 
+  // Check session and redirect based on role (runs when session changes or on mount)
+  useEffect(() => {
+    const checkSessionAndRedirect = async () => {
+      if (!session?.user) {
+        // If no session and we're on a protected route, go to landing
+        if (appState === 'admin-dashboard' || appState === 'manager-dashboard' || appState === 'staff-dashboard' || appState === 'client-app') {
+          setAppState('landing');
+        }
+        return;
+      }
+
+      try {
+        const profile = await getMyProfile();
+        console.log('Session check - Profile:', profile);
+        if (profile) {
+          console.log(`Session check - User role: ${profile.role}, Current appState: ${appState}`);
+          // Redirect based on role - always check and redirect if needed
+          if (profile.role === 'admin') {
+            const hasSubscription = await hasActiveSubscription(profile.id);
+            if (!hasSubscription) {
+              if (appState !== 'subscription-required') {
+                setAppState('subscription-required');
+              }
+            } else {
+              if (appState !== 'admin-dashboard') {
+                setAppState('admin-dashboard');
+              }
+            }
+          } else if (profile.role === 'manager') {
+            if (appState !== 'manager-dashboard') {
+              setAppState('manager-dashboard');
+            }
+          } else if (profile.role === 'staff') {
+            if (appState !== 'staff-dashboard') {
+              setAppState('staff-dashboard');
+            }
+          } else {
+            // Client role
+            if (appState !== 'client-app' && appState !== 'onboarding' && appState !== 'subscription-required') {
+              setAppState('client-app');
+            }
+          }
+        }
+      } catch (err) {
+        console.error('Error checking session and redirecting:', err);
+      }
+    };
+
+    checkSessionAndRedirect();
+  }, [session]);
+
   // Handle auth callback from email confirmation
   useEffect(() => {
     const handleAuthCallback = async () => {
@@ -122,6 +175,10 @@ function AppContent() {
               } else {
                 setAppState('admin-dashboard');
               }
+            } else if (profile.role === 'manager') {
+              setAppState('manager-dashboard');
+            } else if (profile.role === 'staff') {
+              setAppState('staff-dashboard');
             } else {
               setAppState('client-app');
             }
@@ -156,16 +213,22 @@ function AppContent() {
     // Handle pending subscription from onboarding
     await handlePendingSubscription();
     
-    // Check subscription for admin users
+    // Redirect based on role
     if (profile.role === 'admin' && session?.user) {
+      // Check subscription for admin users
       const hasSubscription = await hasActiveSubscription(session.user.id);
       if (!hasSubscription) {
         setAppState('subscription-required');
         return;
       }
+      setAppState('admin-dashboard');
+    } else if (profile.role === 'manager') {
+      setAppState('manager-dashboard');
+    } else if (profile.role === 'staff') {
+      setAppState('staff-dashboard');
+    } else {
+      setAppState('client-app');
     }
-    
-    setAppState('admin-dashboard');
   };
 
   const handleClientLogin = () => {
@@ -188,6 +251,10 @@ function AppContent() {
         }
       }
       setAppState('admin-dashboard');
+    } else if (profile.role === 'manager') {
+      setAppState('manager-dashboard');
+    } else if (profile.role === 'staff') {
+      setAppState('staff-dashboard');
     } else {
       setAppState('client-app');
     }
@@ -257,6 +324,38 @@ function AppContent() {
           </div>
         }>
           <NewAdminDashboard 
+            onLogout={handleLogout}
+          />
+        </Suspense>
+      );
+    
+    case 'manager-dashboard':
+      return (
+        <Suspense fallback={
+          <div className="min-h-screen bg-gradient-to-br from-pink-50 to-purple-50 flex items-center justify-center">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-pink-500 mx-auto mb-4"></div>
+              <p className="text-gray-600 font-medium">Loading manager dashboard...</p>
+            </div>
+          </div>
+        }>
+          <ManagerDashboard 
+            onLogout={handleLogout}
+          />
+        </Suspense>
+      );
+    
+    case 'staff-dashboard':
+      return (
+        <Suspense fallback={
+          <div className="min-h-screen bg-gradient-to-br from-pink-50 to-purple-50 flex items-center justify-center">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-pink-500 mx-auto mb-4"></div>
+              <p className="text-gray-600 font-medium">Loading staff dashboard...</p>
+            </div>
+          </div>
+        }>
+          <StaffDashboard 
             onLogout={handleLogout}
           />
         </Suspense>

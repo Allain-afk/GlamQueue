@@ -164,26 +164,52 @@ export async function getTodayAppointments(): Promise<AppointmentWithDetails[]> 
     const tomorrow = new Date(today);
     tomorrow.setDate(tomorrow.getDate() + 1);
 
-    const { data, error } = await supabase
+    // Fetch today's bookings
+    const { data: bookings, error: bookingsError } = await supabase
       .from('bookings')
-      .select(`
-        *,
-        profiles:client_id (email)
-      `)
+      .select('*')
       .gte('start_at', today.toISOString())
       .lt('start_at', tomorrow.toISOString())
       .order('start_at', { ascending: true })
       .limit(10);
 
-    if (error) throw error;
+    if (bookingsError) throw bookingsError;
+    if (!bookings || bookings.length === 0) return [];
 
-    return (data || []).map(booking => ({
-      ...booking,
-      client_email: booking.profiles?.email || 'Unknown',
-      client_name: booking.profiles?.email?.split('@')[0] || 'Client',
-      service_name: `Service #${booking.service_id}`,
-      service_price: 500,
-    })) as AppointmentWithDetails[];
+    // Fetch related data in parallel
+    const clientIds = [...new Set(bookings.map(b => b.client_id))];
+    const serviceIds = [...new Set(bookings.map(b => b.service_id))];
+    
+    const [profilesResult, servicesResult] = await Promise.all([
+      supabase
+        .from('profiles')
+        .select('id, email')
+        .in('id', clientIds),
+      supabase
+        .from('services')
+        .select('id, name, price')
+        .in('id', serviceIds)
+    ]);
+
+    if (profilesResult.error) console.error('Error fetching profiles:', profilesResult.error);
+    if (servicesResult.error) console.error('Error fetching services:', servicesResult.error);
+
+    // Create lookup maps
+    const profileMap = new Map((profilesResult.data || []).map(p => [p.id, p.email]));
+    const serviceMap = new Map((servicesResult.data || []).map(s => [s.id, s]));
+
+    return bookings.map(booking => {
+      const clientEmail = profileMap.get(booking.client_id) || 'Unknown';
+      const service = serviceMap.get(booking.service_id);
+      
+      return {
+        ...booking,
+        client_email: clientEmail,
+        client_name: clientEmail.split('@')[0] || 'Client',
+        service_name: service?.name || `Service #${booking.service_id}`,
+        service_price: service?.price || 500,
+      } as AppointmentWithDetails;
+    });
   } catch (error) {
     console.error('Error fetching today appointments:', error);
     return [];
@@ -192,24 +218,50 @@ export async function getTodayAppointments(): Promise<AppointmentWithDetails[]> 
 
 export async function getAllAppointments(limit = 50): Promise<AppointmentWithDetails[]> {
   try {
-    const { data, error } = await supabase
+    // Fetch all bookings
+    const { data: bookings, error: bookingsError } = await supabase
       .from('bookings')
-      .select(`
-        *,
-        profiles:client_id (email)
-      `)
+      .select('*')
       .order('start_at', { ascending: false })
       .limit(limit);
 
-    if (error) throw error;
+    if (bookingsError) throw bookingsError;
+    if (!bookings || bookings.length === 0) return [];
 
-    return (data || []).map(booking => ({
-      ...booking,
-      client_email: booking.profiles?.email || 'Unknown',
-      client_name: booking.profiles?.email?.split('@')[0] || 'Client',
-      service_name: `Service #${booking.service_id}`,
-      service_price: 500,
-    })) as AppointmentWithDetails[];
+    // Fetch related data in parallel
+    const clientIds = [...new Set(bookings.map(b => b.client_id))];
+    const serviceIds = [...new Set(bookings.map(b => b.service_id))];
+    
+    const [profilesResult, servicesResult] = await Promise.all([
+      supabase
+        .from('profiles')
+        .select('id, email')
+        .in('id', clientIds),
+      supabase
+        .from('services')
+        .select('id, name, price')
+        .in('id', serviceIds)
+    ]);
+
+    if (profilesResult.error) console.error('Error fetching profiles:', profilesResult.error);
+    if (servicesResult.error) console.error('Error fetching services:', servicesResult.error);
+
+    // Create lookup maps
+    const profileMap = new Map((profilesResult.data || []).map(p => [p.id, p.email]));
+    const serviceMap = new Map((servicesResult.data || []).map(s => [s.id, s]));
+
+    return bookings.map(booking => {
+      const clientEmail = profileMap.get(booking.client_id) || 'Unknown';
+      const service = serviceMap.get(booking.service_id);
+      
+      return {
+        ...booking,
+        client_email: clientEmail,
+        client_name: clientEmail.split('@')[0] || 'Client',
+        service_name: service?.name || `Service #${booking.service_id}`,
+        service_price: service?.price || 500,
+      } as AppointmentWithDetails;
+    });
   } catch (error) {
     console.error('Error fetching all appointments:', error);
     return [];
@@ -252,19 +304,36 @@ export async function getStaffMembers(): Promise<StaffMember[]> {
 export async function getTopClients(limit = 10): Promise<TopClient[]> {
   try {
     // Get all bookings grouped by client
-    const { data: bookings, error } = await supabase
+    const { data: bookings, error: bookingsError } = await supabase
       .from('bookings')
-      .select(`
-        client_id,
-        service_id,
-        start_at,
-        status,
-        profiles:client_id (email)
-      `)
+      .select('client_id, service_id, start_at, status')
       .eq('status', 'completed')
       .order('created_at', { ascending: false });
 
-    if (error) throw error;
+    if (bookingsError) throw bookingsError;
+    if (!bookings || bookings.length === 0) return [];
+
+    // Fetch related data in parallel
+    const clientIds = [...new Set(bookings.map(b => b.client_id))];
+    const serviceIds = [...new Set(bookings.map(b => b.service_id))];
+    
+    const [profilesResult, servicesResult] = await Promise.all([
+      supabase
+        .from('profiles')
+        .select('id, email')
+        .in('id', clientIds),
+      supabase
+        .from('services')
+        .select('id, price')
+        .in('id', serviceIds)
+    ]);
+
+    if (profilesResult.error) throw profilesResult.error;
+    if (servicesResult.error) throw servicesResult.error;
+
+    // Create lookup maps
+    const profileMap = new Map((profilesResult.data || []).map(p => [p.id, p.email]));
+    const serviceMap = new Map((servicesResult.data || []).map(s => [s.id, s.price]));
 
     // Group by client and calculate totals
     const clientMap = new Map<string, {
@@ -274,9 +343,9 @@ export async function getTopClients(limit = 10): Promise<TopClient[]> {
       lastVisit: string;
     }>();
 
-    bookings?.forEach(booking => {
+    bookings.forEach(booking => {
       const existing = clientMap.get(booking.client_id);
-      const spent = 500; // Average service price
+      const spent = serviceMap.get(booking.service_id) || 500; // Use actual service price or default
       
       if (existing) {
         existing.visits += 1;
@@ -285,10 +354,7 @@ export async function getTopClients(limit = 10): Promise<TopClient[]> {
           existing.lastVisit = booking.start_at;
         }
       } else {
-        const profileData = booking.profiles as unknown as { email: string } | { email: string }[];
-        const profileEmail = Array.isArray(profileData) 
-          ? profileData[0]?.email 
-          : profileData?.email;
+        const profileEmail = profileMap.get(booking.client_id);
         clientMap.set(booking.client_id, {
           email: profileEmail || 'unknown@example.com',
           visits: 1,

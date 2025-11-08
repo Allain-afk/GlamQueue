@@ -1,4 +1,4 @@
-// import { supabase } from '../../lib/supabase'; // Uncomment when database is ready
+import { supabase } from '../../lib/supabase';
 import type { Service, Shop } from '../types';
 
 // Mock data for development (remove when database is ready)
@@ -117,19 +117,42 @@ const mockShops: Shop[] = [
 ];
 
 export async function getServices(): Promise<Service[]> {
-  // Return mock data for now
-  return Promise.resolve(mockServices);
-  
-  // Uncomment when database is ready:
-  /*
-  const { data, error } = await supabase
-    .from('services')
-    .select('*')
-    .order('created_at', { ascending: false });
+  try {
+    const { data, error } = await supabase
+      .from('services')
+      .select(`
+        *,
+        shop:shops(id, name, address)
+      `)
+      .eq('is_active', true)
+      .order('created_at', { ascending: false });
 
-  if (error) throw error;
-  return data as Service[];
-  */
+    if (error) {
+      console.error('Error fetching services:', error);
+      // Fallback to mock data if database query fails
+      return mockServices;
+    }
+    
+    // Map database response to client type
+    return (data || []).map((service: any) => ({
+      id: service.id,
+      name: service.name,
+      description: service.description || '',
+      price: Number(service.price),
+      duration: service.duration,
+      category: service.category,
+      shop_id: service.shop_id,
+      shop_name: service.shop?.name || '',
+      shop_address: service.shop?.address || '',
+      image_url: service.image_url,
+      rating: service.rating ? Number(service.rating) : undefined,
+      created_at: service.created_at,
+    })) as Service[];
+  } catch (err) {
+    console.error('Error in getServices:', err);
+    // Fallback to mock data on error
+    return mockServices;
+  }
 }
 
 export async function getServicesByCategory(category: string): Promise<Service[]> {
@@ -150,36 +173,78 @@ export async function getServicesByCategory(category: string): Promise<Service[]
 }
 
 export async function getServiceById(id: string): Promise<Service | null> {
-  // Return mock data
-  return Promise.resolve(mockServices.find(s => s.id === id) || null);
-  
-  // Uncomment when database is ready:
-  /*
-  const { data, error } = await supabase
-    .from('services')
-    .select('*')
-    .eq('id', id)
-    .single();
+  try {
+    const { data, error } = await supabase
+      .from('services')
+      .select(`
+        *,
+        shop:shops(id, name, address)
+      `)
+      .eq('id', id)
+      .single();
 
-  if (error) throw error;
-  return data as Service;
-  */
+    if (error) {
+      console.error('Error fetching service:', error);
+      // Fallback to mock data
+      return mockServices.find(s => s.id === id) || null;
+    }
+    
+    if (!data) return null;
+    
+    // Map database response to client type
+    return {
+      id: data.id,
+      name: data.name,
+      description: data.description || '',
+      price: Number(data.price),
+      duration: data.duration,
+      category: data.category,
+      shop_id: data.shop_id,
+      shop_name: data.shop?.name || '',
+      shop_address: data.shop?.address || '',
+      image_url: data.image_url,
+      rating: data.rating ? Number(data.rating) : undefined,
+      created_at: data.created_at,
+    } as Service;
+  } catch (err) {
+    console.error('Error in getServiceById:', err);
+    // Fallback to mock data on error
+    return mockServices.find(s => s.id === id) || null;
+  }
 }
 
 export async function getShops(): Promise<Shop[]> {
-  // Return mock data
-  return Promise.resolve(mockShops);
-  
-  // Uncomment when database is ready:
-  /*
-  const { data, error } = await supabase
-    .from('shops')
-    .select('*')
-    .order('rating', { ascending: false });
+  try {
+    const { data, error } = await supabase
+      .from('shops')
+      .select('*')
+      .eq('is_open', true)
+      .order('rating', { ascending: false });
 
-  if (error) throw error;
-  return data as Shop[];
-  */
+    if (error) {
+      console.error('Error fetching shops:', error);
+      // Fallback to mock data if database query fails
+      return mockShops;
+    }
+    
+    // Map database response to client type
+    return (data || []).map((shop: any) => ({
+      id: shop.id,
+      name: shop.name,
+      address: shop.address,
+      rating: shop.rating ? Number(shop.rating) : 0,
+      review_count: shop.review_count || 0,
+      description: shop.description || '',
+      is_open: shop.is_open ?? true,
+      phone_number: shop.phone_number,
+      image_url: shop.image_url,
+      created_at: shop.created_at,
+    })) as Shop[];
+  } catch (err) {
+    console.error('Error in getShops:', err);
+    // Fallback to mock data on error
+    return mockShops;
+  }
 }
 
 export async function getShopById(id: string): Promise<Shop | null> {

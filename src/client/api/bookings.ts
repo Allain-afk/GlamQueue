@@ -10,14 +10,25 @@ export async function createBooking(booking: {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) throw new Error('User not authenticated');
 
+  // Validate that service_id and shop_id are valid UUIDs
+  const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+  
+  if (!uuidRegex.test(booking.service_id)) {
+    throw new Error(`Invalid service_id format: "${booking.service_id}". Expected a valid UUID.`);
+  }
+  
+  if (!uuidRegex.test(booking.shop_id)) {
+    throw new Error(`Invalid shop_id format: "${booking.shop_id}". Expected a valid UUID.`);
+  }
+
   const { data, error } = await supabase
     .from('bookings')
     .insert([
       {
-        user_id: user.id,
-        service_id: booking.service_id,
-        shop_id: booking.shop_id,
-        date_time: booking.date_time,
+        client_id: user.id,
+        service_id: booking.service_id, // Must be UUID
+        shop_id: booking.shop_id, // Must be UUID
+        start_at: booking.date_time,
         status: 'pending' as BookingStatus,
         notes: booking.notes,
       },
@@ -31,9 +42,29 @@ export async function createBooking(booking: {
 
   if (error) {
     console.error('Booking creation error:', error);
+    // Provide more helpful error messages
+    if (error.code === '42501') {
+      throw new Error('Permission denied. Please check your Row Level Security policies.');
+    } else if (error.code === '23503') {
+      throw new Error('Invalid service or salon ID. Please try again.');
+    } else if (error.code === '23505') {
+      throw new Error('A booking already exists for this time slot.');
+    } else if (error.message) {
+      throw new Error(error.message);
+    }
     throw error;
   }
-  return data as Booking;
+  
+  // Map database response to client type
+  return {
+    ...data,
+    id: String(data.id),
+    user_id: data.client_id,
+    shop_id: String(data.shop_id),
+    date_time: data.start_at,
+    service_id: String(data.service_id),
+    shop: data.shop ? { ...data.shop, id: String(data.shop.id) } : undefined,
+  } as Booking;
 }
 
 export async function getMyBookings(): Promise<Booking[]> {
@@ -47,8 +78,8 @@ export async function getMyBookings(): Promise<Booking[]> {
       service:services(*),
       shop:shops(*)
     `)
-    .eq('user_id', user.id)
-    .order('date_time', { ascending: false });
+    .eq('client_id', user.id)
+    .order('start_at', { ascending: false });
 
   if (error) {
     console.error('Error fetching bookings:', error);
@@ -58,7 +89,17 @@ export async function getMyBookings(): Promise<Booking[]> {
     }
     throw error;
   }
-  return (data || []) as Booking[];
+  
+  // Map database response to client type
+  return (data || []).map((booking: any) => ({
+    ...booking,
+    id: String(booking.id),
+    user_id: booking.client_id,
+    shop_id: String(booking.shop_id),
+    date_time: booking.start_at,
+    service_id: String(booking.service_id),
+    shop: booking.shop ? { ...booking.shop, id: String(booking.shop.id) } : undefined,
+  })) as Booking[];
 }
 
 export async function getUpcomingBookings(): Promise<Booking[]> {
@@ -74,10 +115,10 @@ export async function getUpcomingBookings(): Promise<Booking[]> {
       service:services(*),
       shop:shops(*)
     `)
-    .eq('user_id', user.id)
-    .gte('date_time', now)
+    .eq('client_id', user.id)
+    .gte('start_at', now)
     .in('status', ['pending', 'confirmed'])
-    .order('date_time', { ascending: true });
+    .order('start_at', { ascending: true });
 
   if (error) {
     console.error('Error fetching upcoming bookings:', error);
@@ -87,7 +128,17 @@ export async function getUpcomingBookings(): Promise<Booking[]> {
     }
     throw error;
   }
-  return (data || []) as Booking[];
+  
+  // Map database response to client type
+  return (data || []).map((booking: any) => ({
+    ...booking,
+    id: String(booking.id),
+    user_id: booking.client_id,
+    shop_id: String(booking.shop_id),
+    date_time: booking.start_at,
+    service_id: String(booking.service_id),
+    shop: booking.shop ? { ...booking.shop, id: String(booking.shop.id) } : undefined,
+  })) as Booking[];
 }
 
 export async function cancelBooking(bookingId: string): Promise<void> {

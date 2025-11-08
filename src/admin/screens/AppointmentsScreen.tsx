@@ -11,6 +11,22 @@ export function AppointmentsScreen() {
 
   useEffect(() => {
     loadAppointments();
+    
+    // Set up realtime subscription for bookings
+    const { supabase } = require('../../lib/supabase');
+    const channel = supabase
+      .channel('admin-appointments-changes')
+      .on('postgres_changes', 
+        { event: '*', schema: 'public', table: 'bookings' },
+        () => {
+          loadAppointments();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, []);
 
   const loadAppointments = async () => {

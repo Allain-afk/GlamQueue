@@ -67,13 +67,12 @@ export function RedesignedLandingPage({ onGetStarted, onLogin, onStartOnboarding
   };
 
   const handleAPKDownload = () => {
-    // Replace this URL with your actual APK download link
+    //APK download link from GitHub Releases
     const apkDownloadUrl = 'https://github.com/Allain-afk/GlamQueue/releases/download/v1.0.0/app-release.apk';
     window.open(apkDownloadUrl, '_blank');
   };
 
   const handleCopyDownloadLink = () => {
-    // Replace this URL with your actual APK download link
     const apkDownloadUrl = 'https://github.com/Allain-afk/GlamQueue/releases/download/v1.0.0/app-release.apk';
     navigator.clipboard.writeText(apkDownloadUrl).then(() => {
       alert('Download link copied to clipboard!');
