@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Users, Search } from 'lucide-react';
+import { Search } from 'lucide-react';
 import { getManagerStaff } from '../../api/manager';
 import type { StaffMember } from '../../api/admin';
 

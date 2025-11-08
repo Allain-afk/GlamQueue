@@ -119,3 +119,4 @@ temp/
 !README.md
 EDGE_FUNCTION_CODE.txt
 *.txt
+*.files

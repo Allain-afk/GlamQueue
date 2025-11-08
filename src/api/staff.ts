@@ -106,7 +106,6 @@ export async function getStaffAppointments(): Promise<AppointmentWithDetails[]> 
     // Create lookup maps
     const profileMap = new Map((profilesResult.data || []).map(p => [p.id, p.email]));
     const serviceMap = new Map((servicesResult.data || []).map(s => [s.id, s]));
-    const shopMap = new Map((shopsResult.data || []).map(s => [s.id, s.name]));
 
     // Map bookings to AppointmentWithDetails
     return bookings.map(booking => {
@@ -195,7 +194,6 @@ export async function getStaffTodayAppointments(): Promise<AppointmentWithDetail
     // Create lookup maps
     const profileMap = new Map((profilesResult.data || []).map(p => [p.id, p.email]));
     const serviceMap = new Map((servicesResult.data || []).map(s => [s.id, s]));
-    const shopMap = new Map((shopsResult.data || []).map(s => [s.id, s.name]));
 
     // Map bookings to AppointmentWithDetails
     return bookings.map(booking => {

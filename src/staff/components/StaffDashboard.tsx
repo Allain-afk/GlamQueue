@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Search, Bell, LogOut } from 'lucide-react';
+import { Bell, LogOut } from 'lucide-react';
 import { getMyProfile, type Profile } from '../../api/profile';
 import { BookingsScreen } from '../screens/BookingsScreen';
 

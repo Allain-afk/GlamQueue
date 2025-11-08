@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Calendar, Clock, Search, Filter, Check, X } from 'lucide-react';
+import { Calendar, Clock, Search, Check, X } from 'lucide-react';
 import { getManagerAppointments } from '../../api/manager';
 import { adminUpdateBookingStatus } from '../../api/bookings';
 import { supabase } from '../../lib/supabase';
