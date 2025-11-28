@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { Bell, Calendar, Clock, X } from 'lucide-react';
+import { Bell, Calendar, Clock } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import type { AppointmentWithDetails } from '../api/admin';
 
@@ -7,7 +7,7 @@ interface NotificationDropdownProps {
   role?: 'admin' | 'manager' | 'staff' | 'client';
 }
 
-export function NotificationDropdown({ role = 'admin' }: NotificationDropdownProps) {
+export function NotificationDropdown({ role: _role = 'admin' }: NotificationDropdownProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [notifications, setNotifications] = useState<AppointmentWithDetails[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);

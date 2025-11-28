@@ -88,10 +88,6 @@ export async function getDashboardStats(): Promise<DashboardStats> {
     yesterday.setDate(yesterday.getDate() - 1);
     const yesterdayStr = yesterday.toISOString();
 
-    const dayBeforeYesterday = new Date(yesterday);
-    dayBeforeYesterday.setDate(dayBeforeYesterday.getDate() - 1);
-    const dayBeforeYesterdayStr = dayBeforeYesterday.toISOString();
-
     // Get today's bookings with service prices
     const { data: todayBookings, error: todayError } = await supabase
       .from('bookings')
@@ -135,18 +131,6 @@ export async function getDashboardStats(): Promise<DashboardStats> {
         const price = servicePriceMap.get(b.service_id) || 500;
         return sum + price;
       }, 0);
-
-    // Calculate yesterday's revenue (only from completed bookings)
-    const yesterdayRevenue = (yesterdayBookings || [])
-      .filter(b => b.status === 'completed')
-      .reduce((sum, b) => {
-        const price = servicePriceMap.get(b.service_id) || 500;
-        return sum + price;
-      }, 0);
-
-    const revenueChange = yesterdayRevenue > 0 
-      ? Math.round(((todayRevenue - yesterdayRevenue) / yesterdayRevenue) * 100)
-      : (todayRevenue > 0 ? 100 : 0);
 
     // Get total appointments for today (all statuses)
     const totalAppointments = (todayBookings || []).length;

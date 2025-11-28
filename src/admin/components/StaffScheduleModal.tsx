@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { X, Calendar, Clock, MapPin, CheckCircle, XCircle, AlertCircle, User } from 'lucide-react';
+import { X, Calendar, Clock, MapPin, CheckCircle, XCircle, AlertCircle } from 'lucide-react';
 import { getStaffSchedule } from '../../api/staffSchedule';
 import type { AppointmentWithDetails } from '../../api/admin';
 import type { StaffMember } from '../../api/admin';

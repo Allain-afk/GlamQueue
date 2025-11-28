@@ -42,16 +42,6 @@ export function DashboardScreen() {
     loadData();
   }, []); // Only run once on mount
 
-  const handleRefresh = async () => {
-    await Promise.all([
-      fetchDashboardStats(true),
-      fetchTodayAppointments(true),
-      fetchStaffMembers(true),
-      fetchTopClients(true),
-      fetchRevenueData(true),
-    ]);
-  };
-
   // Memoize formatted functions to prevent re-creation
   const formatCurrency = useMemo(() => {
     return (amount: number) => {
@@ -127,7 +117,7 @@ export function DashboardScreen() {
     <div className="space-y-6">
       {/* AI Insights Card */}
       <AIInsightsCard 
-        dashboardStats={dashboardStats}
+        dashboardStats={dashboardStats ?? undefined}
         appointments={todayAppointments}
       />
 

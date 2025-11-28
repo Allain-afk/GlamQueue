@@ -120,6 +120,7 @@ export async function getManagerDashboardStats(): Promise<DashboardStats> {
 
     return {
       todayRevenue,
+      totalRevenue: todayRevenue, // For manager, totalRevenue is same as todayRevenue for their shop
       revenueChange: Math.round(revenueChange),
       totalAppointments: totalAppointments || 0,
       appointmentsChange: 18,
@@ -132,6 +133,7 @@ export async function getManagerDashboardStats(): Promise<DashboardStats> {
     console.error('Error fetching manager dashboard stats:', error);
     return {
       todayRevenue: 0,
+      totalRevenue: 0,
       revenueChange: 0,
       totalAppointments: 0,
       appointmentsChange: 0,

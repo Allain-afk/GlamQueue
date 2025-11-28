@@ -2,7 +2,7 @@ import { supabase } from '../lib/supabase';
 import type { AppointmentWithDetails } from './admin';
 
 // Get staff schedule/appointments
-export async function getStaffSchedule(staffId: string): Promise<AppointmentWithDetails[]> {
+export async function getStaffSchedule(_staffId: string): Promise<AppointmentWithDetails[]> {
   try {
     // Note: Assuming bookings table has staff_id field or we need to join through another table
     // For now, we'll get all bookings and filter by checking if staff is assigned
