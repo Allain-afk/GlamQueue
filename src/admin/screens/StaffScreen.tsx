@@ -1,10 +1,15 @@
 import { useState, useEffect } from 'react';
 import { Users, Star, Calendar, Clock, TrendingUp, Award, Plus } from 'lucide-react';
 import { getStaffMembers, type StaffMember } from '../../api/admin';
+import { StaffScheduleModal } from '../components/StaffScheduleModal';
+import { StaffEditModal } from '../components/StaffEditModal';
 
 export function StaffScreen() {
   const [staff, setStaff] = useState<StaffMember[]>([]);
   const [loading, setLoading] = useState(true);
+  const [selectedStaff, setSelectedStaff] = useState<StaffMember | null>(null);
+  const [showScheduleModal, setShowScheduleModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
 
   useEffect(() => {
     loadStaff();
@@ -112,7 +117,7 @@ export function StaffScreen() {
           {staff.map((member) => (
             <div
               key={member.id}
-              className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-lg transition-shadow"
+              className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-lg transition-shadow flex flex-col"
             >
               {/* Header with Status */}
               <div className="relative h-24 bg-gradient-to-br from-pink-400 to-purple-500">
@@ -128,8 +133,8 @@ export function StaffScreen() {
                 </div>
               </div>
 
-              {/* Content */}
-              <div className="pt-10 p-6">
+              {/* Content - flex-grow to push buttons to bottom */}
+              <div className="pt-10 p-6 flex flex-col flex-grow">
                 <div className="mb-4">
                   <h3 className="text-lg font-semibold text-gray-900 mb-1">{member.name}</h3>
                   <div className="flex items-center justify-between">
@@ -193,12 +198,27 @@ export function StaffScreen() {
                   </div>
                 )}
 
-                {/* Actions */}
-                <div className="flex space-x-2">
-                  <button className="flex-1 px-3 py-2 bg-pink-500 hover:bg-pink-600 text-white rounded-lg text-sm font-medium transition-colors">
+                {/* Spacer to push buttons to bottom */}
+                <div className="flex-grow"></div>
+
+                {/* Actions - Always at bottom */}
+                <div className="flex space-x-2 mt-4 pt-4 border-t border-gray-100">
+                  <button
+                    onClick={() => {
+                      setSelectedStaff(member);
+                      setShowScheduleModal(true);
+                    }}
+                    className="flex-1 px-3 py-2 bg-pink-500 hover:bg-pink-600 text-white rounded-lg text-sm font-medium transition-colors"
+                  >
                     View Schedule
                   </button>
-                  <button className="flex-1 px-3 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg text-sm font-medium transition-colors">
+                  <button
+                    onClick={() => {
+                      setSelectedStaff(member);
+                      setShowEditModal(true);
+                    }}
+                    className="flex-1 px-3 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg text-sm font-medium transition-colors"
+                  >
                     Edit
                   </button>
                 </div>
@@ -242,6 +262,31 @@ export function StaffScreen() {
           </div>
         </div>
       </div>
+
+      {/* Modals */}
+      {selectedStaff && (
+        <>
+          <StaffScheduleModal
+            staff={selectedStaff}
+            isOpen={showScheduleModal}
+            onClose={() => {
+              setShowScheduleModal(false);
+              setSelectedStaff(null);
+            }}
+          />
+          <StaffEditModal
+            staff={selectedStaff}
+            isOpen={showEditModal}
+            onClose={() => {
+              setShowEditModal(false);
+              setSelectedStaff(null);
+            }}
+            onUpdated={() => {
+              loadStaff();
+            }}
+          />
+        </>
+      )}
     </div>
   );
 }

@@ -207,7 +207,7 @@ export async function sendMessageToGemini(
           temperature: 0.7,
           topK: 40,
           topP: 0.95, 
-          maxOutputTokens: 300, // Reduced for shorter responses
+          maxOutputTokens: 500, // Increased for insights generation
         },
       }),
     });
@@ -254,6 +254,66 @@ export async function sendMessageToGemini(
 
     return {
       text: 'Sorry, I encountered an error processing your request. Please try again or contact support if the issue persists.',
+      error: error instanceof Error ? error.message : 'Unknown error'
+    };
+  }
+}
+
+/**
+ * Generate business insights using Gemini API
+ * Specialized function for generating longer-form insights
+ */
+export async function generateBusinessInsights(
+  businessContext: string,
+  prompt: string
+): Promise<GeminiResponse> {
+  if (!GEMINI_API_KEY) {
+    return {
+      text: 'Sorry, the AI service is not configured. Please contact support.',
+      error: 'API key not found'
+    };
+  }
+
+  try {
+    const response = await fetch(`${GEMINI_API_URL}?key=${GEMINI_API_KEY}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        contents: [{
+          role: 'user',
+          parts: [{ text: prompt }]
+        }],
+        systemInstruction: {
+          parts: [{ text: getSystemPrompt(businessContext) }]
+        },
+        generationConfig: {
+          temperature: 0.7,
+          topK: 40,
+          topP: 0.95,
+          maxOutputTokens: 800, // More tokens for insights
+        },
+      }),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.error?.message || `API error: ${response.status}`);
+    }
+
+    const data = await response.json();
+    
+    if (data.candidates && data.candidates[0] && data.candidates[0].content) {
+      const text = data.candidates[0].content.parts[0].text;
+      return { text: text.trim() };
+    }
+
+    throw new Error('Unexpected response format from Gemini API');
+  } catch (error) {
+    console.error('Gemini API Error:', error);
+    return {
+      text: 'Sorry, I encountered an error generating insights. Please try again.',
       error: error instanceof Error ? error.message : 'Unknown error'
     };
   }

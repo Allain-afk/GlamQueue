@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Calendar, Clock, Search, Filter, Eye, Check, X, MoreHorizontal } from 'lucide-react';
 import { getAllAppointments, type AppointmentWithDetails } from '../../api/admin';
 import { adminUpdateBookingStatus } from '../../api/bookings';
+import { supabase } from '../../lib/supabase';
 
 export function AppointmentsScreen() {
   const [appointments, setAppointments] = useState<AppointmentWithDetails[]>([]);
@@ -13,7 +14,6 @@ export function AppointmentsScreen() {
     loadAppointments();
     
     // Set up realtime subscription for bookings
-    const { supabase } = require('../../lib/supabase');
     const channel = supabase
       .channel('admin-appointments-changes')
       .on('postgres_changes', 
@@ -36,6 +36,7 @@ export function AppointmentsScreen() {
       setAppointments(data);
     } catch (error) {
       console.error('Error loading appointments:', error);
+      setAppointments([]);
     } finally {
       setLoading(false);
     }

@@ -109,7 +109,7 @@ export function ServicesExplore({ onSelectService, onBack }: ServicesExploreProp
             {filteredServices.map((service) => (
               <div
                 key={service.id}
-                className="bg-white rounded-2xl shadow-sm border border-pink-100 overflow-hidden hover:shadow-lg hover:border-pink-300 transition-all cursor-pointer group"
+                className="bg-white rounded-2xl shadow-sm border border-pink-100 overflow-hidden hover:shadow-lg hover:border-pink-300 transition-all cursor-pointer group flex flex-col"
                 onClick={() => onSelectService(service)}
               >
                 {/* Service Image */}
@@ -142,7 +142,7 @@ export function ServicesExplore({ onSelectService, onBack }: ServicesExploreProp
                 </div>
 
                 {/* Service Info */}
-                <div className="p-5">
+                <div className="p-5 flex flex-col flex-grow">
                   <h3 className="font-bold text-lg text-gray-900 mb-2 group-hover:text-pink-600 transition-colors">
                     {service.name}
                   </h3>
@@ -157,8 +157,11 @@ export function ServicesExplore({ onSelectService, onBack }: ServicesExploreProp
                     </div>
                   </div>
 
-                  {/* Duration & Book Button */}
-                  <div className="flex items-center justify-between">
+                  {/* Spacer to push button to bottom */}
+                  <div className="flex-grow"></div>
+
+                  {/* Duration & Book Button - Always at bottom */}
+                  <div className="flex items-center justify-between pt-3 border-t border-gray-100 mt-auto">
                     <div className="flex items-center gap-1 text-gray-600">
                       <Clock className="w-4 h-4" />
                       <span className="text-sm">{service.duration} min</span>

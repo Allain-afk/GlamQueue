@@ -8,11 +8,10 @@ import {
   Send,
   Smartphone,
   Gift,
-  Sparkles,
-  RefreshCw,
 } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { useAdminData } from '../context/AdminDataContext';
+import { AIInsightsCard } from '../components/AIInsightsCard';
 
 export function DashboardScreen() {
   const {
@@ -126,42 +125,20 @@ export function DashboardScreen() {
 
   return (
     <div className="space-y-6">
-      {/* AI Insights Banner */}
-      <div className="bg-gradient-to-r from-purple-500 to-pink-500 rounded-2xl p-6 text-white shadow-lg">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-3">
-            <div className="bg-white/20 p-2 rounded-lg">
-              <Sparkles className="w-6 h-6" />
-            </div>
-            <div>
-              <h3 className="font-semibold text-lg">AI Insights</h3>
-              <p className="text-sm text-white/90">Today's Optimization Suggestions</p>
-            </div>
-          </div>
-          <div className="flex space-x-2">
-            <button 
-              onClick={handleRefresh}
-              className="px-4 py-2 bg-white/20 hover:bg-white/30 rounded-lg text-sm font-medium transition-colors flex items-center space-x-2"
-              disabled={isLoading}
-            >
-              <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />
-              <span>Refresh</span>
-            </button>
-            <button className="px-4 py-2 bg-white/20 hover:bg-white/30 rounded-lg text-sm font-medium transition-colors">
-              View All
-            </button>
-          </div>
-        </div>
-      </div>
+      {/* AI Insights Card */}
+      <AIInsightsCard 
+        dashboardStats={dashboardStats}
+        appointments={todayAppointments}
+      />
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
           <div className="flex items-center justify-between mb-4">
             <div>
-              <p className="text-sm text-gray-600 mb-1">Today's Revenue</p>
+              <p className="text-sm text-gray-600 mb-1">Total Revenue</p>
               <h3 className="text-3xl font-bold text-gray-900">
-                {formatCurrency(dashboardStats?.todayRevenue || 0)}
+                {formatCurrency(dashboardStats?.totalRevenue || 0)}
               </h3>
             </div>
             <div className="p-3 bg-green-100 rounded-xl">
@@ -170,7 +147,7 @@ export function DashboardScreen() {
           </div>
           <div className="flex items-center text-sm">
             <span className="text-green-600 font-semibold">+{dashboardStats?.revenueChange || 0}%</span>
-            <span className="text-gray-500 ml-2">from yesterday</span>
+            <span className="text-gray-500 ml-2">from last month</span>
           </div>
         </div>
 
@@ -416,7 +393,7 @@ export function DashboardScreen() {
               {topClients.map((client) => (
                 <div
                   key={client.id}
-                  className="p-4 rounded-xl border border-gray-100 hover:border-pink-200 hover:bg-pink-50/30 transition-colors"
+                  className="p-4 rounded-xl border border-gray-100 hover:border-pink-200 hover:bg-pink-50/30 transition-colors flex flex-col"
                 >
                   <div className="flex items-center justify-between mb-3">
                     <div className="w-10 h-10 bg-gradient-to-br from-pink-400 to-purple-500 rounded-full flex items-center justify-center text-white font-semibold">
@@ -428,7 +405,11 @@ export function DashboardScreen() {
                   </div>
                   <p className="font-semibold text-gray-900 mb-1">{client.name}</p>
                   <p className="text-sm text-gray-500 mb-2">{client.visits} visits • {Math.floor(Math.random() * 10) + 1} days ago</p>
-                  <div className="flex items-center justify-between pt-3 border-t border-gray-100">
+                  
+                  {/* Spacer to push footer to bottom */}
+                  <div className="flex-grow"></div>
+                  
+                  <div className="flex items-center justify-between pt-3 border-t border-gray-100 mt-auto">
                     <span className="text-xs text-gray-500">Total Spent</span>
                     <span className="text-sm font-bold text-gray-900">{formatCurrency(client.totalSpent)}</span>
                   </div>

@@ -1,12 +1,17 @@
 import { useState, useEffect } from 'react';
 import { Users, Search, Mail, Phone, TrendingUp, Calendar, DollarSign, Award } from 'lucide-react';
 import { getAllClients, type Client } from '../../api/admin';
+import { ClientHistoryModal } from '../components/ClientHistoryModal';
+import { BookNowModal } from '../components/BookNowModal';
 
 export function ClientsScreen() {
   const [clients, setClients] = useState<Client[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [tierFilter, setTierFilter] = useState<string>('all');
+  const [selectedClient, setSelectedClient] = useState<Client | null>(null);
+  const [showHistoryModal, setShowHistoryModal] = useState(false);
+  const [showBookModal, setShowBookModal] = useState(false);
 
   useEffect(() => {
     loadClients();
@@ -169,7 +174,7 @@ export function ClientsScreen() {
           {filteredClients.map((client) => (
             <div
               key={client.id}
-              className="bg-white rounded-xl p-6 border border-gray-100 hover:border-pink-200 hover:shadow-lg transition-all cursor-pointer"
+              className="bg-white rounded-xl p-6 border border-gray-100 hover:border-pink-200 hover:shadow-lg transition-all cursor-pointer flex flex-col"
             >
               {/* Header */}
               <div className="flex items-start justify-between mb-4">
@@ -229,17 +234,32 @@ export function ClientsScreen() {
               </div>
 
               {/* Last Visit */}
-              <div className="flex items-center justify-between pt-4 border-t border-gray-100">
+              <div className="flex items-center justify-between pt-4 border-t border-gray-100 mb-4">
                 <p className="text-xs text-gray-500">Last visit</p>
                 <p className="text-xs font-semibold text-gray-900">{formatDate(client.last_visit)}</p>
               </div>
 
-              {/* Actions */}
-              <div className="mt-4 flex space-x-2">
-                <button className="flex-1 px-3 py-2 bg-pink-50 hover:bg-pink-100 text-pink-600 rounded-lg text-sm font-medium transition-colors">
+              {/* Spacer to push buttons to bottom */}
+              <div className="flex-grow"></div>
+
+              {/* Actions - Always at bottom */}
+              <div className="flex space-x-2 pt-4 border-t border-gray-100">
+                <button
+                  onClick={() => {
+                    setSelectedClient(client);
+                    setShowHistoryModal(true);
+                  }}
+                  className="flex-1 px-3 py-2 bg-pink-50 hover:bg-pink-100 text-pink-600 rounded-lg text-sm font-medium transition-colors"
+                >
                   View History
                 </button>
-                <button className="flex-1 px-3 py-2 bg-gray-50 hover:bg-gray-100 text-gray-600 rounded-lg text-sm font-medium transition-colors">
+                <button
+                  onClick={() => {
+                    setSelectedClient(client);
+                    setShowBookModal(true);
+                  }}
+                  className="flex-1 px-3 py-2 bg-gray-50 hover:bg-gray-100 text-gray-600 rounded-lg text-sm font-medium transition-colors"
+                >
                   Book Now
                 </button>
               </div>
@@ -267,6 +287,31 @@ export function ClientsScreen() {
           </div>
         </div>
       </div>
+
+      {/* Modals */}
+      {selectedClient && (
+        <>
+          <ClientHistoryModal
+            client={selectedClient}
+            isOpen={showHistoryModal}
+            onClose={() => {
+              setShowHistoryModal(false);
+              setSelectedClient(null);
+            }}
+          />
+          <BookNowModal
+            client={selectedClient}
+            isOpen={showBookModal}
+            onClose={() => {
+              setShowBookModal(false);
+              setSelectedClient(null);
+            }}
+            onBookingCreated={() => {
+              loadClients();
+            }}
+          />
+        </>
+      )}
     </div>
   );
 }

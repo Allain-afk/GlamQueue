@@ -1,7 +1,10 @@
-import { useState } from 'react';
-import { Search, MapPin, Bell, Calendar, Sparkles, Scissors, Palette, User, LogOut, ShoppingBag } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Search, MapPin, Calendar, Sparkles, Scissors, Palette, Clock, CheckCircle, XCircle, AlertCircle } from 'lucide-react';
 import { useAuth } from '../../auth/useAuth';
 import { useClient } from '../context/ClientContext';
+import { getMyProfile, type Profile } from '../../api/profile';
+import { SettingsDropdown } from '../../components/SettingsDropdown';
+import { AvatarDropdown } from '../../components/AvatarDropdown';
 import type { Service } from '../types';
 
 interface ClientHomeProps {
@@ -14,8 +17,21 @@ interface ClientHomeProps {
 
 export function ClientHome({ onSelectService, onViewAllServices, onViewSchedule, onViewProfile, onLogout }: ClientHomeProps) {
   const { session } = useAuth();
-  const { services, upcomingBookings, loading } = useClient();
+  const { services, bookings, upcomingBookings, loading } = useClient();
   const [searchQuery, setSearchQuery] = useState('');
+  const [profile, setProfile] = useState<Profile | null>(null);
+
+  useEffect(() => {
+    const loadProfile = async () => {
+      try {
+        const userProfile = await getMyProfile();
+        setProfile(userProfile);
+      } catch (error) {
+        console.error('Error loading profile:', error);
+      }
+    };
+    loadProfile();
+  }, []);
 
   const categories = [
     { id: 'haircut', name: 'Haircut', icon: Scissors, color: '#e91e8c' },
@@ -41,18 +57,14 @@ export function ClientHome({ onSelectService, onViewAllServices, onViewSchedule,
               </div>
             </div>
             <div className="flex items-center gap-3">
-              <button className="p-2 hover:bg-pink-50 rounded-full transition-colors relative">
-                <Bell className="w-6 h-6 text-gray-700" />
-                {upcomingBookings.length > 0 && (
-                  <span className="absolute top-1 right-1 w-2 h-2 bg-pink-500 rounded-full"></span>
-                )}
-              </button>
-              <button
-                onClick={onViewProfile}
-                className="w-10 h-10 bg-gradient-to-r from-pink-500 to-pink-600 rounded-full flex items-center justify-center text-white font-semibold hover:from-pink-600 hover:to-pink-700 transition-all cursor-pointer"
-              >
-                {session?.user?.email?.[0].toUpperCase() || 'G'}
-              </button>
+              <SettingsDropdown onLogout={onLogout} role="client" />
+              <div className="h-8 w-px bg-gray-200"></div>
+              <AvatarDropdown 
+                profile={profile} 
+                onLogout={onLogout} 
+                role="client"
+                onViewProfile={onViewProfile}
+              />
             </div>
           </div>
 
@@ -71,44 +83,138 @@ export function ClientHome({ onSelectService, onViewAllServices, onViewSchedule,
       </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-8">
-        {/* CTA Buttons Section */}
+        {/* Booking History Section */}
         <section>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {/* Order Services CTA */}
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-xl font-bold text-gray-900">Booking History</h2>
             <button
               onClick={onViewAllServices}
-              className="bg-gradient-to-r from-pink-500 to-pink-600 hover:from-pink-600 hover:to-pink-700 text-white rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all transform hover:scale-105 flex flex-col items-center justify-center gap-3 group"
+              className="bg-gradient-to-r from-pink-500 to-pink-600 hover:from-pink-600 hover:to-pink-700 text-white px-4 py-2 rounded-lg font-medium text-sm shadow-md hover:shadow-lg transition-all"
             >
-              <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center group-hover:bg-white/30 transition-colors">
-                <ShoppingBag className="w-8 h-8" />
-              </div>
-              <h3 className="text-xl font-bold">Order Services</h3>
-              <p className="text-pink-100 text-sm text-center">Browse and book salon services</p>
+              + Book New Service
             </button>
-
-            {/* Profile Management CTA */}
-            <button
-              onClick={onViewProfile}
-              className="bg-white border-2 border-pink-200 hover:border-pink-400 text-gray-900 rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all transform hover:scale-105 flex flex-col items-center justify-center gap-3 group"
-            >
-              <div className="w-16 h-16 bg-gradient-to-r from-pink-500 to-pink-600 rounded-full flex items-center justify-center group-hover:from-pink-600 group-hover:to-pink-700 transition-colors">
-                <User className="w-8 h-8 text-white" />
+          </div>
+          
+          <div className="bg-white rounded-2xl shadow-sm border border-pink-100 overflow-hidden">
+            {loading ? (
+              <div className="text-center py-12">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-pink-500 mx-auto"></div>
+                <p className="text-gray-500 mt-4">Loading your bookings...</p>
               </div>
-              <h3 className="text-xl font-bold">My Profile</h3>
-              <p className="text-gray-600 text-sm text-center">Manage your account settings</p>
-            </button>
-
-            {/* Logout CTA */}
-            <button
-              onClick={onLogout}
-              className="bg-white border-2 border-red-200 hover:border-red-400 text-red-600 rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all transform hover:scale-105 flex flex-col items-center justify-center gap-3 group"
-            >
-              <div className="w-16 h-16 bg-red-50 rounded-full flex items-center justify-center group-hover:bg-red-100 transition-colors">
-                <LogOut className="w-8 h-8 text-red-600" />
+            ) : bookings.length === 0 ? (
+              <div className="text-center py-12 px-4">
+                <div className="w-20 h-20 mx-auto bg-pink-50 rounded-full flex items-center justify-center mb-4">
+                  <Calendar className="w-10 h-10 text-pink-400" />
+                </div>
+                <h3 className="text-lg font-semibold text-gray-900 mb-2">No Bookings Yet</h3>
+                <p className="text-gray-500 mb-4">You haven't made any bookings. Start exploring our services!</p>
+                <button
+                  onClick={onViewAllServices}
+                  className="bg-gradient-to-r from-pink-500 to-pink-600 hover:from-pink-600 hover:to-pink-700 text-white px-6 py-2 rounded-lg font-medium shadow-md hover:shadow-lg transition-all"
+                >
+                  Browse Services
+                </button>
               </div>
-              <h3 className="text-xl font-bold">Logout</h3>
-              <p className="text-red-500 text-sm text-center">Sign out of your account</p>
-            </button>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead className="bg-gradient-to-r from-pink-50 to-purple-50 border-b border-pink-100">
+                    <tr>
+                      <th className="text-left py-4 px-6 font-semibold text-gray-700">Service</th>
+                      <th className="text-left py-4 px-6 font-semibold text-gray-700">Salon</th>
+                      <th className="text-left py-4 px-6 font-semibold text-gray-700">Date & Time</th>
+                      <th className="text-left py-4 px-6 font-semibold text-gray-700">Price</th>
+                      <th className="text-left py-4 px-6 font-semibold text-gray-700">Status</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-pink-50">
+                    {bookings.map((booking) => {
+                      const bookingDate = new Date(booking.date_time);
+                      const isPast = bookingDate < new Date();
+                      
+                      const getStatusIcon = (status: string) => {
+                        switch (status.toLowerCase()) {
+                          case 'completed':
+                            return <CheckCircle className="w-4 h-4 text-green-500" />;
+                          case 'cancelled':
+                            return <XCircle className="w-4 h-4 text-red-500" />;
+                          case 'pending':
+                            return <Clock className="w-4 h-4 text-yellow-500" />;
+                          case 'confirmed':
+                            return <CheckCircle className="w-4 h-4 text-blue-500" />;
+                          default:
+                            return <AlertCircle className="w-4 h-4 text-gray-500" />;
+                        }
+                      };
+                      
+                      const getStatusStyle = (status: string) => {
+                        switch (status.toLowerCase()) {
+                          case 'completed':
+                            return 'bg-green-100 text-green-700 border-green-200';
+                          case 'cancelled':
+                            return 'bg-red-100 text-red-700 border-red-200';
+                          case 'pending':
+                            return 'bg-yellow-100 text-yellow-700 border-yellow-200';
+                          case 'confirmed':
+                            return 'bg-blue-100 text-blue-700 border-blue-200';
+                          default:
+                            return 'bg-gray-100 text-gray-700 border-gray-200';
+                        }
+                      };
+                      
+                      return (
+                        <tr 
+                          key={booking.id} 
+                          className={`hover:bg-pink-50/50 transition-colors ${isPast ? 'bg-gray-50/50' : ''}`}
+                        >
+                          <td className="py-4 px-6">
+                            <div className="flex items-center gap-3">
+                              <div className="w-10 h-10 bg-gradient-to-r from-pink-400 to-purple-500 rounded-lg flex items-center justify-center flex-shrink-0">
+                                <Scissors className="w-5 h-5 text-white" />
+                              </div>
+                              <div>
+                                <p className="font-medium text-gray-900">{booking.service?.name || 'Service'}</p>
+                                <p className="text-sm text-gray-500">{booking.service?.duration || 0} min</p>
+                              </div>
+                            </div>
+                          </td>
+                          <td className="py-4 px-6">
+                            <p className="text-gray-700">{booking.shop?.name || 'Salon'}</p>
+                          </td>
+                          <td className="py-4 px-6">
+                            <div>
+                              <p className="font-medium text-gray-900">
+                                {bookingDate.toLocaleDateString('en-US', {
+                                  weekday: 'short',
+                                  month: 'short',
+                                  day: 'numeric',
+                                  year: 'numeric'
+                                })}
+                              </p>
+                              <p className="text-sm text-gray-500">
+                                {bookingDate.toLocaleTimeString('en-US', {
+                                  hour: '2-digit',
+                                  minute: '2-digit'
+                                })}
+                              </p>
+                            </div>
+                          </td>
+                          <td className="py-4 px-6">
+                            <p className="font-semibold text-pink-600">₱{booking.service?.price || 0}</p>
+                          </td>
+                          <td className="py-4 px-6">
+                            <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium border ${getStatusStyle(booking.status)}`}>
+                              {getStatusIcon(booking.status)}
+                              {booking.status.charAt(0).toUpperCase() + booking.status.slice(1)}
+                            </span>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            )}
           </div>
         </section>
 
@@ -210,7 +316,7 @@ export function ClientHome({ onSelectService, onViewAllServices, onViewSchedule,
               {featuredServices.map((service) => (
                 <div
                   key={service.id}
-                  className="bg-white rounded-2xl shadow-sm border border-pink-100 overflow-hidden hover:shadow-md hover:border-pink-300 transition-all cursor-pointer group"
+                  className="bg-white rounded-2xl shadow-sm border border-pink-100 overflow-hidden hover:shadow-md hover:border-pink-300 transition-all cursor-pointer group flex flex-col"
                   onClick={() => onSelectService(service)}
                 >
                   <div className="h-48 bg-gradient-to-br from-pink-400 to-purple-500 relative overflow-hidden">
@@ -225,12 +331,16 @@ export function ClientHome({ onSelectService, onViewAllServices, onViewSchedule,
                       <span className="text-pink-600 font-bold">₱{service.price}</span>
                     </div>
                   </div>
-                  <div className="p-4">
+                  <div className="p-4 flex flex-col flex-grow">
                     <h3 className="font-semibold text-gray-900 mb-1 group-hover:text-pink-600 transition-colors">
                       {service.name}
                     </h3>
                     <p className="text-sm text-gray-600 mb-2 line-clamp-2">{service.description}</p>
-                    <div className="flex items-center justify-between text-sm">
+                    
+                    {/* Spacer to push footer to bottom */}
+                    <div className="flex-grow"></div>
+                    
+                    <div className="flex items-center justify-between text-sm pt-2 border-t border-gray-100 mt-auto">
                       <span className="text-gray-500">{service.duration} min</span>
                       <span className="text-pink-600 font-medium">{service.shop_name}</span>
                     </div>

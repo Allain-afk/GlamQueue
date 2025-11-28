@@ -990,7 +990,7 @@ html {
 /* Book An Appointment Section */
 .booking-section {
   padding: 6rem 0;
-  background: #f8f9fa;
+  background: #fef7fb;
 }
 
 .booking-container {
@@ -1016,48 +1016,58 @@ html {
 
 .booking-form {
   background: white;
-  padding: 2.5rem;
+  padding: 3rem;
   border-radius: 1rem;
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
 }
 
 .form-row {
   display: flex;
-  gap: 1rem;
-  margin-bottom: 1.5rem;
+  gap: 1.25rem;
+  margin-bottom: 1.25rem;
 }
 
 .form-field {
   flex: 1;
   position: relative;
   display: flex;
-  align-items: center;
+  flex-direction: column;
+  align-items: stretch;
 }
 
 .form-field.full-width {
   flex: 1;
-  margin-bottom: 1.5rem;
+  margin-bottom: 1.25rem;
 }
 
 .field-icon {
-  position: absolute;
-  left: 1rem;
-  z-index: 2;
-  font-size: 1.2rem;
+  display: none; /* Hide emoji icons for a more formal look */
 }
 
 .form-input,
 .form-select {
   width: 100%;
-  height: 52px;
-  padding: 1rem 1rem 1rem 3rem;
-  border: 1px solid #e5e5e5;
-  border-radius: 0.5rem;
-  font-size: 1rem;
-  background: #f8f9fa;
-  transition: all 0.3s ease;
-  color: #1a1a1a;
+  height: 48px;
+  padding: 0.75rem 1rem;
+  border: 1.5px solid #dcdcdc;
+  border-radius: 0.375rem;
+  font-size: 0.9375rem;
+  background: white;
+  transition: all 0.2s ease;
+  color: #333333;
   font-family: inherit;
+  font-weight: 400;
+  letter-spacing: 0.01em;
+}
+
+.form-input::placeholder {
+  color: #999999;
+  font-weight: 400;
+}
+
+.form-input:hover,
+.form-select:hover {
+  border-color: #b8b8b8;
 }
 
 .form-input:focus,
@@ -1065,22 +1075,34 @@ html {
   outline: none;
   border-color: #e91e8c;
   background: white;
-  box-shadow: 0 0 0 3px rgba(233, 30, 140, 0.1);
+  box-shadow: 0 0 0 3px rgba(233, 30, 140, 0.08);
 }
 
 .form-select {
   appearance: none;
   cursor: pointer;
+  padding-right: 2.5rem;
+}
+
+.form-select:disabled {
+  background-color: #f5f5f5;
+  color: #999999;
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+.form-select option {
+  padding: 0.5rem;
+  color: #333333;
 }
 
 .dropdown-arrow {
   position: absolute;
   right: 1rem;
-  top: 50%;
-  transform: translateY(-50%);
-  color: #6b6b6b;
+  bottom: 0.9rem;
+  color: #666666;
   pointer-events: none;
-  font-size: 0.75rem;
+  font-size: 0.7rem;
   z-index: 1;
 }
 
@@ -1088,25 +1110,63 @@ html {
   color: #e91e8c;
 }
 
+.form-select:disabled + .dropdown-arrow {
+  color: #cccccc;
+}
+
 .booking-btn {
   width: 100%;
   background: #e91e8c;
   color: white;
-  border: 2px solid #e91e8c;
-  padding: 1rem 2rem;
-  border-radius: 0.5rem;
+  border: none;
+  padding: 0.875rem 2rem;
+  border-radius: 0.375rem;
   font-weight: 600;
-  font-size: 1.1rem;
+  font-size: 1rem;
   cursor: pointer;
-  transition: all 0.3s ease;
-  margin-top: 1rem;
+  transition: all 0.2s ease;
+  margin-top: 1.5rem;
+  letter-spacing: 0.02em;
 }
 
 .booking-btn:hover {
   background: #d81b60;
-  border-color: #d81b60;
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(233, 30, 140, 0.3);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(233, 30, 140, 0.25);
+}
+
+.booking-btn:active {
+  transform: translateY(0);
+}
+
+/* Checkbox Styling */
+.form-checkbox-wrapper {
+  margin: 1.5rem 0;
+  padding: 0.75rem 0;
+}
+
+.form-checkbox-label {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  cursor: pointer;
+  user-select: none;
+}
+
+.form-checkbox {
+  width: 18px;
+  height: 18px;
+  margin-top: 0.125rem;
+  cursor: pointer;
+  accent-color: #e91e8c;
+  flex-shrink: 0;
+}
+
+.checkbox-text {
+  color: #555555;
+  font-size: 0.9rem;
+  line-height: 1.5;
+  font-weight: 400;
 }
 
 .booking-calendar {
@@ -1124,8 +1184,8 @@ html {
 }
 
 .calendar-nav {
-  background: #f8f9fa;
-  border: none;
+  background: rgba(255, 255, 255, 0.8);
+  border: 1px solid rgba(233, 30, 140, 0.15);
   padding: 0.5rem 1rem;
   border-radius: 0.5rem;
   cursor: pointer;
@@ -1137,6 +1197,7 @@ html {
 .calendar-nav:hover {
   background: #e91e8c;
   color: white;
+  border-color: #e91e8c;
 }
 
 .calendar-month {

@@ -73,8 +73,14 @@ export async function getStaffAppointments(): Promise<AppointmentWithDetails[]> 
       .eq('shop_id', shopId)
       .order('start_at', { ascending: true });
     
-    if (bookingsError) throw bookingsError;
-    if (!bookings || bookings.length === 0) return [];
+    if (bookingsError) {
+      console.error('Error fetching staff bookings:', bookingsError);
+      throw bookingsError;
+    }
+    
+    if (!bookings || bookings.length === 0) {
+      return [];
+    }
 
     // Fetch related data in parallel
     const clientIds = [...new Set(bookings.map(b => b.client_id))];
@@ -161,8 +167,14 @@ export async function getStaffTodayAppointments(): Promise<AppointmentWithDetail
       .lt('start_at', tomorrow.toISOString())
       .order('start_at', { ascending: true });
     
-    if (bookingsError) throw bookingsError;
-    if (!bookings || bookings.length === 0) return [];
+    if (bookingsError) {
+      console.error('Error fetching staff today bookings:', bookingsError);
+      throw bookingsError;
+    }
+    
+    if (!bookings || bookings.length === 0) {
+      return [];
+    }
 
     // Fetch related data in parallel
     const clientIds = [...new Set(bookings.map(b => b.client_id))];

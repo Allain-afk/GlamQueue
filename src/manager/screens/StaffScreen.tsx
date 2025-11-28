@@ -68,7 +68,7 @@ export function StaffScreen() {
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {filteredStaff.map((member) => (
-          <div key={member.id} className="bg-white rounded-xl shadow-sm border border-pink-100 p-6">
+          <div key={member.id} className="bg-white rounded-xl shadow-sm border border-pink-100 p-6 flex flex-col">
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-3">
                 <div className="w-12 h-12 bg-gradient-to-br from-pink-400 to-purple-500 rounded-full flex items-center justify-center text-white font-semibold">
@@ -81,7 +81,7 @@ export function StaffScreen() {
               </div>
               <div className={`w-3 h-3 rounded-full ${getStatusColor(member.status)}`} title={member.status}></div>
             </div>
-            <div className="space-y-2 text-sm">
+            <div className="space-y-2 text-sm flex-grow">
               <p className="text-gray-600">{member.email}</p>
               <div className="flex items-center justify-between">
                 <span className="text-gray-500">Rating</span>

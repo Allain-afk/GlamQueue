@@ -30,7 +30,7 @@ export function AnalyticsScreen() {
 
   useEffect(() => {
     loadAnalytics();
-  }, []);
+  }, [timeRange]);
 
   const loadAnalytics = async () => {
     setLoading(true);
@@ -39,6 +39,16 @@ export function AnalyticsScreen() {
       setAnalytics(data);
     } catch (error) {
       console.error('Error loading analytics:', error);
+      // Set empty data on error
+      setAnalytics({
+        totalRevenue: 0,
+        totalBookings: 0,
+        averageBookingValue: 0,
+        clientRetentionRate: 0,
+        popularServices: [],
+        peakHours: [],
+        monthlyTrend: [],
+      });
     } finally {
       setLoading(false);
     }

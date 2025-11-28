@@ -382,7 +382,7 @@ export function MarketingScreen() {
         <div className="space-y-6">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {promotions.map((promo) => (
-              <div key={promo.id} className="bg-white rounded-xl p-6 border border-gray-100">
+              <div key={promo.id} className="bg-white rounded-xl p-6 border border-gray-100 flex flex-col">
                 <div className="flex items-start justify-between mb-4">
                   <div>
                     <h3 className="text-lg font-semibold text-gray-900 mb-1">{promo.title}</h3>
@@ -414,7 +414,11 @@ export function MarketingScreen() {
                   </div>
                 </div>
 
-                <div className="flex items-center justify-between pt-4 border-t border-gray-100">
+                {/* Spacer to push button to bottom */}
+                <div className="flex-grow"></div>
+
+                {/* Actions - Always at bottom */}
+                <div className="flex items-center justify-between pt-4 border-t border-gray-100 mt-4">
                   <div className="flex items-center space-x-2 text-sm text-gray-600">
                     <Calendar className="w-4 h-4" />
                     <span>Expires: {promo.expiry}</span>

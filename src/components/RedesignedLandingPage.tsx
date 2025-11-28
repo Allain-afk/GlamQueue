@@ -1,13 +1,13 @@
 import { Download, Smartphone, TrendingUp, Calendar, MapPin, Phone, Mail, Facebook, Instagram, Twitter } from 'lucide-react';
 import { SimpleChatBot } from './SimpleChatBot';
-import { AnalyticsAIChatbot } from './AnalyticsAIChatbot';
 import { PWAInstallPrompt } from './PWAInstallPrompt';
 import { usePWAInstall } from '../hooks/usePWAInstall';
-import { useState, type MouseEvent } from 'react';
+import { useState, useEffect, type MouseEvent } from 'react';
 import { savePendingBooking } from '../utils/bookingStorage';
 import { type PlanType } from './OnboardingPaymentScreen';
+import { getShops, getServices } from '../client/api/services';
+import type { Shop, Service } from '../client/types';
 import '../styles/components/redesigned-landing.css';
-import '../styles/components/analytics-chatbot.css';
 import '../styles/components/pwa-install.css';
 
 interface LandingPageProps {
@@ -23,6 +23,11 @@ export function RedesignedLandingPage({ onGetStarted, onLogin, onStartOnboarding
   const [showBookingModal, setShowBookingModal] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   
+  // Shops and Services state
+  const [shops, setShops] = useState<Shop[]>([]);
+  const [services, setServices] = useState<Service[]>([]);
+  const [loadingData, setLoadingData] = useState(true);
+  
   // Booking form state
   const [bookingData, setBookingData] = useState({
     name: '',
@@ -37,6 +42,27 @@ export function RedesignedLandingPage({ onGetStarted, onLogin, onStartOnboarding
   // Calendar state
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
+
+  // Fetch shops and services on component mount
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setLoadingData(true);
+        const [shopsData, servicesData] = await Promise.all([
+          getShops(),
+          getServices(),
+        ]);
+        setShops(shopsData);
+        setServices(servicesData);
+      } catch (error) {
+        console.error('Error fetching shops and services:', error);
+      } finally {
+        setLoadingData(false);
+      }
+    };
+
+    fetchData();
+  }, []);
 
   const handleNavClick = (event: MouseEvent<HTMLAnchorElement>, targetId: string) => {
     event.preventDefault();
@@ -335,9 +361,6 @@ export function RedesignedLandingPage({ onGetStarted, onLogin, onStartOnboarding
               <button className="primary-btn" onClick={handleSignUpClick} disabled={isLoading}>
                 Book Now!
               </button>
-              <button className="secondary-btn">
-                Watch Demo
-              </button>
             </div>
           </div>
           <div className="hero-image">
@@ -459,7 +482,7 @@ export function RedesignedLandingPage({ onGetStarted, onLogin, onStartOnboarding
               </p>
             </div>
             
-            <div className="service-card analytics-card">
+            <div className="service-card">
               <div className="service-icon">
                 <TrendingUp size={40} />
               </div>
@@ -468,9 +491,6 @@ export function RedesignedLandingPage({ onGetStarted, onLogin, onStartOnboarding
                 Track your business performance with detailed analytics 
                 and AI-powered insights to help you grow.
               </p>
-              <div className="analytics-chatbot-wrapper">
-                <AnalyticsAIChatbot />
-              </div>
             </div>
             
             <div className="service-card">
@@ -690,11 +710,16 @@ export function RedesignedLandingPage({ onGetStarted, onLogin, onStartOnboarding
                     value={bookingData.salon}
                     onChange={(e) => setBookingData({ ...bookingData, salon: e.target.value })}
                     required
+                    disabled={loadingData}
                   >
-                    <option value="">Select Salon</option>
-                    <option value="Glam Studio Manila">Glam Studio Manila</option>
-                    <option value="Beauty Lounge BGC">Beauty Lounge BGC</option>
-                    <option value="Nail Spa Quezon City">Nail Spa Quezon City</option>
+                    <option value="">
+                      {loadingData ? 'Loading salons...' : 'Select Salon'}
+                    </option>
+                    {shops.map((shop) => (
+                      <option key={shop.id} value={shop.name}>
+                        {shop.name}
+                      </option>
+                    ))}
                   </select>
                   <div className="dropdown-arrow">▼</div>
                 </div>
@@ -708,14 +733,16 @@ export function RedesignedLandingPage({ onGetStarted, onLogin, onStartOnboarding
                     value={bookingData.service}
                     onChange={(e) => setBookingData({ ...bookingData, service: e.target.value })}
                     required
+                    disabled={loadingData}
                   >
-                    <option value="">Select Services</option>
-                    <option value="Premium Haircut">Premium Haircut</option>
-                    <option value="Hair Coloring">Hair Coloring</option>
-                    <option value="Manicure & Pedicure">Manicure & Pedicure</option>
-                    <option value="Facial Treatment">Facial Treatment</option>
-                    <option value="Hair Styling">Hair Styling</option>
-                    <option value="Keratin Treatment">Keratin Treatment</option>
+                    <option value="">
+                      {loadingData ? 'Loading services...' : 'Select Services'}
+                    </option>
+                    {services.map((service) => (
+                      <option key={service.id} value={service.name}>
+                        {service.name} - ₱{service.price} ({service.duration} min)
+                      </option>
+                    ))}
                   </select>
                   <div className="dropdown-arrow">▼</div>
                 </div>
@@ -743,22 +770,16 @@ export function RedesignedLandingPage({ onGetStarted, onLogin, onStartOnboarding
               </div>
               
               {/* Advance Booking Option */}
-              <div className="form-field full-width" style={{ marginTop: '1rem', marginBottom: '1rem' }}>
-                <label style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', cursor: 'pointer', userSelect: 'none' }}>
+              <div className="form-checkbox-wrapper">
+                <label className="form-checkbox-label">
                   <input
                     type="checkbox"
+                    className="form-checkbox"
                     checked={bookingData.isAdvanceBooking}
                     onChange={(e) => setBookingData({ ...bookingData, isAdvanceBooking: e.target.checked })}
-                    style={{ 
-                      width: '20px', 
-                      height: '20px', 
-                      cursor: 'pointer', 
-                      accentColor: '#e91e8c',
-                      flexShrink: 0
-                    }}
                   />
-                  <span style={{ color: '#4a4a4a', fontSize: '0.95rem', lineHeight: '1.5' }}>
-                    📅 Book this appointment in advance (recommended for future dates)
+                  <span className="checkbox-text">
+                    Book this appointment in advance (recommended for future dates)
                   </span>
                 </label>
               </div>

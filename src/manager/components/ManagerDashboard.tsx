@@ -1,10 +1,13 @@
 import { useState, useEffect } from 'react';
-import { Search, Bell, Settings, LogOut } from 'lucide-react';
+import { Search } from 'lucide-react';
 import { getMyProfile, type Profile } from '../../api/profile';
 import { DashboardScreen } from '../screens/DashboardScreen';
 import { AppointmentsScreen } from '../screens/AppointmentsScreen';
 import { ClientsScreen } from '../screens/ClientsScreen';
 import { StaffScreen } from '../screens/StaffScreen';
+import { NotificationDropdown } from '../../components/NotificationDropdown';
+import { SettingsDropdown } from '../../components/SettingsDropdown';
+import { AvatarDropdown } from '../../components/AvatarDropdown';
 
 interface ManagerDashboardProps {
   onLogout: () => void;
@@ -127,34 +130,14 @@ export function ManagerDashboard({ onLogout }: ManagerDashboardProps) {
 
             {/* Right Actions */}
             <div className="flex items-center space-x-3">
-              <button className="p-2 hover:bg-gray-100 rounded-lg transition-colors relative">
-                <Bell className="w-5 h-5 text-gray-600" />
-                <span className="absolute top-1 right-1 w-2 h-2 bg-pink-500 rounded-full"></span>
-              </button>
+              <NotificationDropdown role="manager" />
               
-              <button className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
-                <Settings className="w-5 h-5 text-gray-600" />
-              </button>
+              <SettingsDropdown onLogout={onLogout} role="manager" />
 
               <div className="h-8 w-px bg-gray-200"></div>
 
               {/* User Profile */}
-              <div className="flex items-center space-x-3">
-                <div className="text-right hidden sm:block">
-                  <p className="text-sm font-medium text-gray-900">{profile?.email?.split('@')[0] || 'Manager'}</p>
-                  <p className="text-xs text-gray-500">Manager</p>
-                </div>
-                <div className="w-10 h-10 bg-gradient-to-br from-pink-400 to-purple-500 rounded-full flex items-center justify-center text-white font-semibold">
-                  {profile?.email?.charAt(0).toUpperCase() || 'M'}
-                </div>
-                <button
-                  onClick={onLogout}
-                  className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-                  title="Logout"
-                >
-                  <LogOut className="w-5 h-5 text-gray-600" />
-                </button>
-              </div>
+              <AvatarDropdown profile={profile} onLogout={onLogout} role="manager" />
             </div>
           </div>
         </div>

@@ -48,6 +48,7 @@ export function Analytics() {
 
   useEffect(() => {
     loadAnalytics();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [timeRange]);
 
   const loadAnalytics = async () => {
@@ -80,9 +81,30 @@ export function Analytics() {
       const totalBookings = bookings?.length || 0;
       const totalUsers = users?.length || 0;
       
-      // Mock revenue calculation (you'd need a real revenue field in your database)
-      const totalRevenue = totalBookings * 1500; // Assuming average booking value of ₱1,500
-      const averageBookingValue = totalBookings > 0 ? totalRevenue / totalBookings : 0;
+      // Get service IDs and fetch prices
+      const serviceIds = [...new Set((bookings || []).map(b => b.service_id).filter(Boolean))];
+      let servicePriceMap = new Map();
+      
+      if (serviceIds.length > 0) {
+        const { data: services, error: servicesError } = await supabase
+          .from('services')
+          .select('id, name, price')
+          .in('id', serviceIds);
+
+        if (!servicesError && services) {
+          servicePriceMap = new Map(services.map(s => [s.id, { name: s.name, price: s.price || 500 }]));
+        }
+      }
+      
+      // Calculate revenue using actual service prices (only completed bookings)
+      const completedBookings = bookings?.filter(b => b.status === 'completed') || [];
+      const totalRevenue = completedBookings.reduce((sum, b) => {
+        const service = servicePriceMap.get(b.service_id);
+        const price = service?.price || 500;
+        return sum + price;
+      }, 0);
+      
+      const averageBookingValue = completedBookings.length > 0 ? totalRevenue / completedBookings.length : 0;
 
       const bookingsByStatus = {
         pending: bookings?.filter(b => b.status === 'pending').length || 0,
@@ -92,7 +114,7 @@ export function Analytics() {
       };
 
       // Group bookings by month
-      const bookingsByMonth = bookings?.reduce((acc: any[], booking) => {
+      const bookingsByMonth = bookings?.reduce((acc: Array<{ month: string; count: number }>, booking) => {
         const month = new Date(booking.created_at).toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
         const existing = acc.find(item => item.month === month);
         if (existing) {
@@ -103,20 +125,45 @@ export function Analytics() {
         return acc;
       }, []) || [];
 
-      // Top services (mock data)
-      const topServices = [
-        { service_id: 1, count: 45 },
-        { service_id: 2, count: 32 },
-        { service_id: 3, count: 28 },
-        { service_id: 4, count: 15 },
-      ];
+      // Top services (real data)
+      const serviceCountMap = new Map<number, number>();
+      bookings?.forEach(b => {
+        serviceCountMap.set(b.service_id, (serviceCountMap.get(b.service_id) || 0) + 1);
+      });
+      
+      const topServices = Array.from(serviceCountMap.entries())
+        .map(([serviceId, count]) => ({ service_id: serviceId, count }))
+        .sort((a, b) => b.count - a.count)
+        .slice(0, 5);
 
-      // Recent activity (mock data)
-      const recentActivity = [
-        { id: 1, action: 'New booking created', timestamp: new Date().toISOString(), user: 'client@example.com' },
-        { id: 2, action: 'Booking confirmed', timestamp: new Date(Date.now() - 3600000).toISOString(), user: 'admin@example.com' },
-        { id: 3, action: 'User registered', timestamp: new Date(Date.now() - 7200000).toISOString(), user: 'newuser@example.com' },
-      ];
+      // Recent activity (from bookings and users)
+      const recentActivity: Array<{ id: number; action: string; timestamp: string; user: string }> = [];
+      
+      // Add recent bookings
+      const recentBookings = bookings?.slice(0, 5) || [];
+      recentBookings.forEach((booking) => {
+        recentActivity.push({
+          id: booking.id,
+          action: `Booking ${booking.status}`,
+          timestamp: booking.created_at || booking.start_at,
+          user: booking.client_id || 'Unknown',
+        });
+      });
+      
+      // Add recent users
+      const recentUsers = users?.slice(0, 3) || [];
+      recentUsers.forEach((user, index) => {
+        recentActivity.push({
+          id: 1000 + index,
+          action: 'User registered',
+          timestamp: user.created_at || new Date().toISOString(),
+          user: user.email || 'Unknown',
+        });
+      });
+      
+      // Sort by timestamp and take most recent
+      recentActivity.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+      const finalActivity = recentActivity.slice(0, 5);
 
       setAnalytics({
         totalBookings,
@@ -126,7 +173,7 @@ export function Analytics() {
         bookingsByStatus,
         bookingsByMonth,
         topServices,
-        recentActivity,
+        recentActivity: finalActivity,
       });
     } catch (error) {
       console.error('Error loading analytics:', error);
@@ -175,7 +222,7 @@ export function Analytics() {
         <h2 className="text-2xl font-bold text-gray-900">Analytics Dashboard</h2>
         <select
           value={timeRange}
-          onChange={(e) => setTimeRange(e.target.value as any)}
+          onChange={(e) => setTimeRange(e.target.value as '7d' | '30d' | '90d' | '1y')}
           className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
         >
           <option value="7d">Last 7 days</option>
@@ -260,14 +307,18 @@ export function Analytics() {
         <div className="bg-white p-6 rounded-lg shadow">
           <h3 className="text-lg font-medium text-gray-900 mb-4">Top Services</h3>
           <div className="space-y-3">
-            {analytics.topServices.map((service) => (
-              <div key={service.service_id} className="flex items-center justify-between">
-                <div className="flex items-center space-x-2">
-                  <span className="text-sm font-medium text-gray-700">Service #{service.service_id}</span>
+            {analytics.topServices.length > 0 ? (
+              analytics.topServices.map((service) => (
+                <div key={service.service_id} className="flex items-center justify-between">
+                  <div className="flex items-center space-x-2">
+                    <span className="text-sm font-medium text-gray-700">Service #{service.service_id}</span>
+                  </div>
+                  <span className="text-sm font-bold text-gray-900">{service.count} bookings</span>
                 </div>
-                <span className="text-sm font-bold text-gray-900">{service.count} bookings</span>
-              </div>
-            ))}
+              ))
+            ) : (
+              <p className="text-sm text-gray-500 text-center py-4">No service data available</p>
+            )}
           </div>
         </div>
       </div>

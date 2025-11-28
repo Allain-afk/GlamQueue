@@ -148,9 +148,12 @@ export async function getManagerDashboardStats(): Promise<DashboardStats> {
 export async function getManagerAppointments(limit = 50): Promise<AppointmentWithDetails[]> {
   try {
     const shopId = await getManagerShopId();
-    if (!shopId) return [];
+    if (!shopId) {
+      console.log('No shop found for manager');
+      return [];
+    }
 
-    // Fetch bookings for this shop
+    // Fetch bookings for this shop only
     const { data: bookings, error: bookingsError } = await supabase
       .from('bookings')
       .select('*')
@@ -158,8 +161,14 @@ export async function getManagerAppointments(limit = 50): Promise<AppointmentWit
       .order('start_at', { ascending: false })
       .limit(limit);
     
-    if (bookingsError) throw bookingsError;
-    if (!bookings || bookings.length === 0) return [];
+    if (bookingsError) {
+      console.error('Error fetching manager bookings:', bookingsError);
+      throw bookingsError;
+    }
+    
+    if (!bookings || bookings.length === 0) {
+      return [];
+    }
 
     // Fetch related data in parallel
     const clientIds = [...new Set(bookings.map(b => b.client_id))];
