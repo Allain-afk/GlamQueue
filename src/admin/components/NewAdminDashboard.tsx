@@ -109,7 +109,7 @@ export function NewAdminDashboard({ onLogout }: NewAdminDashboardProps) {
     <AdminDataProvider>
       <div className="min-h-screen bg-gradient-to-br from-pink-50 via-white to-purple-50">
         {/* Header */}
-        <header className="bg-white border-b border-gray-200 sticky top-0 z-50 shadow-sm">
+        <header className="bg-white border-b border-gray-200 sticky top-0 z-50 shadow-sm safe-area-top">
         <div className="max-w-[1600px] mx-auto px-6 py-4">
           <div className="flex items-center justify-between">
             {/* Logo */}
@@ -177,7 +177,7 @@ export function NewAdminDashboard({ onLogout }: NewAdminDashboardProps) {
         </main>
 
         {/* Footer */}
-        <footer className="max-w-[1600px] mx-auto px-6 py-6 mt-12 border-t border-gray-200">
+        <footer className="max-w-[1600px] mx-auto px-6 py-6 mt-12 border-t border-gray-200 safe-area-bottom">
           <div className="flex items-center justify-between text-sm text-gray-600">
             <p>© 2024 GlamQueue. All rights reserved.</p>
             <div className="flex space-x-6">
@@ -191,4 +191,3 @@ export function NewAdminDashboard({ onLogout }: NewAdminDashboardProps) {
     </AdminDataProvider>
   );
 }
-

@@ -7,6 +7,7 @@ interface NotificationDropdownProps {
   role?: 'admin' | 'manager' | 'staff' | 'client';
 }
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 export function NotificationDropdown({ role: _role = 'admin' }: NotificationDropdownProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [notifications, setNotifications] = useState<AppointmentWithDetails[]>([]);
@@ -204,10 +205,10 @@ export function NotificationDropdown({ role: _role = 'admin' }: NotificationDrop
                           <p className="text-xs text-gray-700 font-medium">
                             Service: {notification.service_name}
                           </p>
-                          {(notification as any).shop_name && (
+                          {(notification as AppointmentWithDetails & { shop_name?: string; shop_address?: string }).shop_name && (
                             <p className="text-xs text-gray-500">
-                              Location: {(notification as any).shop_name}
-                              {(notification as any).shop_address && ` - ${(notification as any).shop_address}`}
+                              Location: {(notification as AppointmentWithDetails & { shop_name?: string; shop_address?: string }).shop_name}
+                              {(notification as AppointmentWithDetails & { shop_name?: string; shop_address?: string }).shop_address && ` - ${(notification as AppointmentWithDetails & { shop_name?: string; shop_address?: string }).shop_address}`}
                             </p>
                           )}
                         </div>

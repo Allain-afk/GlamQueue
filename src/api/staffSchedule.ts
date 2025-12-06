@@ -2,6 +2,7 @@ import { supabase } from '../lib/supabase';
 import type { AppointmentWithDetails } from './admin';
 
 // Get staff schedule/appointments
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 export async function getStaffSchedule(_staffId: string): Promise<AppointmentWithDetails[]> {
   try {
     // Note: Assuming bookings table has staff_id field or we need to join through another table

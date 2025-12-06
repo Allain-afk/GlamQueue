@@ -232,12 +232,12 @@ export function StaffScheduleModal({ staff, isOpen, onClose }: StaffScheduleModa
                       <Clock className="w-4 h-4 text-gray-400" />
                       <span>{formatTime(appointment.start_at)}</span>
                     </div>
-                    {(appointment as any).shop_name && (
+                    {(appointment as AppointmentWithDetails & { shop_name?: string; shop_address?: string }).shop_name && (
                       <div className="flex items-center gap-2 text-gray-600 md:col-span-2">
                         <MapPin className="w-4 h-4 text-gray-400" />
-                        <span>{(appointment as any).shop_name}</span>
-                        {(appointment as any).shop_address && (
-                          <span className="text-gray-400">- {(appointment as any).shop_address}</span>
+                        <span>{(appointment as AppointmentWithDetails & { shop_name?: string; shop_address?: string }).shop_name}</span>
+                        {(appointment as AppointmentWithDetails & { shop_name?: string; shop_address?: string }).shop_address && (
+                          <span className="text-gray-400">- {(appointment as AppointmentWithDetails & { shop_name?: string; shop_address?: string }).shop_address}</span>
                         )}
                       </div>
                     )}

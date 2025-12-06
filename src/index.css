@@ -10,6 +10,8 @@
   margin: 0;
   padding: 0;
   box-sizing: border-box;
+  /* Mobile: Remove tap highlight */
+  -webkit-tap-highlight-color: transparent;
 }
 
 body {
@@ -22,6 +24,23 @@ body {
   background-color: #ffffff;
   color: #000000;
   line-height: 1.6;
+  
+  /* Mobile: App-like feel */
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-y: none;
+}
+
+/* Mobile: Allow text selection in inputs */
+input, textarea, [contenteditable="true"] {
+  user-select: text;
+  -webkit-user-select: text;
+}
+
+/* Mobile: Prevent iOS zoom on focus */
+input, select, textarea {
+  font-size: 16px !important; 
 }
 
 /* Basic Reset */
@@ -67,6 +86,22 @@ img {
   max-width: 100%;
   height: auto;
   display: block;
+}
+
+/* Mobile: Safe Area Utilities */
+.safe-area-top {
+  padding-top: env(safe-area-inset-top);
+}
+
+.safe-area-bottom {
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+.safe-area-padding {
+  padding-top: env(safe-area-inset-top);
+  padding-bottom: env(safe-area-inset-bottom);
+  padding-left: env(safe-area-inset-left);
+  padding-right: env(safe-area-inset-right);
 }
 
 /* Custom Admin Dashboard Styles - Matching GlamQueue Brand Colors */
@@ -126,6 +161,8 @@ img {
   box-shadow: 0 1px 3px 0 rgba(233, 30, 140, 0.1),
     0 1px 2px 0 rgba(233, 30, 140, 0.06);
   border-bottom: 1px solid rgba(233, 30, 140, 0.1);
+  /* Mobile: Safe Area support for header */
+  padding-top: env(safe-area-inset-top);
 }
 
 .admin-nav-tab {

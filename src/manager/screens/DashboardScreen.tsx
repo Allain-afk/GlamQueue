@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { TrendingUp, Calendar, Users, Activity } from 'lucide-react';
 import { getManagerDashboardStats, getManagerAppointments } from '../../api/manager';
 import { supabase } from '../../lib/supabase';
+import type { AppointmentWithDetails } from '../../api/admin';
 
 export function DashboardScreen() {
   const [stats, setStats] = useState({
@@ -14,7 +15,7 @@ export function DashboardScreen() {
     staffUtilization: 0,
     utilizationChange: 0,
   });
-  const [todayAppointments, setTodayAppointments] = useState<any[]>([]);
+  const [todayAppointments, setTodayAppointments] = useState<AppointmentWithDetails[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {

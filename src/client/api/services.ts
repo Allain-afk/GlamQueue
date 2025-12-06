@@ -134,6 +134,7 @@ export async function getServices(): Promise<Service[]> {
     }
     
     // Map database response to client type
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     return (data || []).map((service: any) => ({
       id: service.id,
       name: service.name,
@@ -228,6 +229,7 @@ export async function getShops(): Promise<Shop[]> {
     }
     
     // Map database response to client type
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     return (data || []).map((shop: any) => ({
       id: shop.id,
       name: shop.name,

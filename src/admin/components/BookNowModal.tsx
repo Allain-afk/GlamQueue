@@ -70,10 +70,10 @@ export function BookNowModal({ client, isOpen, onClose, onBookingCreated }: Book
 
       // Set defaults
       if (servicesResult.data && servicesResult.data.length > 0) {
-        setSelectedService(servicesResult.data[0] as any);
+        setSelectedService(servicesResult.data[0] as Service);
       }
       if (shopsResult.data && shopsResult.data.length > 0) {
-        setSelectedShop(shopsResult.data[0] as any);
+        setSelectedShop(shopsResult.data[0] as Shop);
       }
     } catch (error) {
       console.error('Error loading services and shops:', error);

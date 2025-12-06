@@ -141,12 +141,12 @@ export function ClientHistoryModal({ client, isOpen, onClose }: ClientHistoryMod
                       <Clock className="w-4 h-4 text-gray-400" />
                       <span>{formatTime(booking.start_at)}</span>
                     </div>
-                    {(booking as any).shop_name && (
+                    {(booking as AppointmentWithDetails & { shop_name?: string; shop_address?: string }).shop_name && (
                       <div className="flex items-center gap-2 text-gray-600 md:col-span-2">
                         <MapPin className="w-4 h-4 text-gray-400" />
-                        <span>{(booking as any).shop_name}</span>
-                        {(booking as any).shop_address && (
-                          <span className="text-gray-400">- {(booking as any).shop_address}</span>
+                        <span>{(booking as AppointmentWithDetails & { shop_name?: string; shop_address?: string }).shop_name}</span>
+                        {(booking as AppointmentWithDetails & { shop_name?: string; shop_address?: string }).shop_address && (
+                          <span className="text-gray-400">- {(booking as AppointmentWithDetails & { shop_name?: string; shop_address?: string }).shop_address}</span>
                         )}
                       </div>
                     )}

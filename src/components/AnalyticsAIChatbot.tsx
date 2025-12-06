@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { Bot, X, Send, TrendingUp, Lightbulb, BarChart3 } from 'lucide-react';
+import { generateBusinessInsights, isGeminiConfigured, type ChatMessage } from '../services/geminiService';
 
 interface Message {
   id: string;
@@ -19,6 +20,7 @@ export function AnalyticsAIChatbot() {
     },
   ]);
   const [inputValue, setInputValue] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = () => {
@@ -29,8 +31,8 @@ export function AnalyticsAIChatbot() {
     scrollToBottom();
   }, [messages]);
 
-  const handleSend = () => {
-    if (!inputValue.trim()) return;
+  const handleSend = async () => {
+    if (!inputValue.trim() || isLoading) return;
 
     const userMessage: Message = {
       id: Date.now().toString(),
@@ -40,48 +42,74 @@ export function AnalyticsAIChatbot() {
     };
 
     setMessages((prev) => [...prev, userMessage]);
+    const query = inputValue;
     setInputValue('');
+    setIsLoading(true);
 
-    // Simulate AI response based on user query
-    setTimeout(() => {
-      const botResponse = generateAIResponse(inputValue.toLowerCase());
+    try {
+      // Check if Gemini API is configured
+      if (!isGeminiConfigured()) {
+        const errorMessage: Message = {
+          id: (Date.now() + 1).toString(),
+          text: 'Sorry, the AI service is not configured. Please ensure VITE_GEMINI_API_KEY is set in your environment variables.',
+          sender: 'bot',
+          timestamp: new Date(),
+        };
+        setMessages((prev) => [...prev, errorMessage]);
+        setIsLoading(false);
+        return;
+      }
+
+      // Build conversation history from messages
+      const conversationHistory: ChatMessage[] = messages
+        .filter(msg => msg.id !== '1') // Exclude initial greeting
+        .map(msg => ({
+          role: msg.sender === 'user' ? 'user' : 'model',
+          content: msg.text
+        }));
+      
+      // Create business context for analytics insights
+      const businessContext = `
+You are a specialized AI Business Insights Assistant for a salon management platform. 
+Your role is to provide actionable business insights, revenue optimization strategies, 
+customer retention tactics, and growth recommendations based on salon business data.
+
+Conversation history for context:
+${conversationHistory.map(m => `${m.role}: ${m.content}`).join('\n')}
+
+Focus areas:
+- Revenue trends and optimization strategies
+- Peak hours and scheduling optimization
+- Customer retention and loyalty programs
+- Service performance analysis
+- Growth opportunities and recommendations
+- Pricing strategies
+
+Keep responses concise, actionable, and formatted with bullet points where appropriate.
+Use emojis sparingly for visual appeal (📊, ⏰, 👥, 🚀, ✨, 💡).
+`;
+
+      const geminiResponse = await generateBusinessInsights(businessContext, query);
+      
       const botMessage: Message = {
         id: (Date.now() + 1).toString(),
-        text: botResponse,
+        text: geminiResponse.text,
         sender: 'bot',
         timestamp: new Date(),
       };
       setMessages((prev) => [...prev, botMessage]);
-    }, 1000);
-  };
-
-  const generateAIResponse = (query: string): string => {
-    // AI insights based on common queries
-    if (query.includes('revenue') || query.includes('sales') || query.includes('income')) {
-      return '📊 Based on your sales trends, I recommend:\n\n• Focus on your top 3 services (they generate 60% of revenue)\n• Offer bundle packages during slow periods\n• Implement a loyalty program to increase repeat visits\n• Consider premium pricing for peak hours\n\nWould you like detailed revenue analysis?';
+    } catch (error) {
+      console.error('Error generating response:', error);
+      const errorMessage: Message = {
+        id: (Date.now() + 1).toString(),
+        text: 'Sorry, I encountered an error processing your request. Please try again or contact support if the issue persists.',
+        sender: 'bot',
+        timestamp: new Date(),
+      };
+      setMessages((prev) => [...prev, errorMessage]);
+    } finally {
+      setIsLoading(false);
     }
-    
-    if (query.includes('peak') || query.includes('busy') || query.includes('schedule')) {
-      return '⏰ Peak Performance Insights:\n\n• Your busiest times are Friday-Sunday (2-5 PM)\n• Consider adding staff during these hours\n• Tuesday-Thursday mornings have low occupancy\n• Offer discounted services during off-peak hours\n\nWant specific scheduling recommendations?';
-    }
-    
-    if (query.includes('customer') || query.includes('client') || query.includes('retention')) {
-      return '👥 Customer Insights:\n\n• Your repeat customer rate is 45% (industry avg: 55%)\n• Average customer lifetime value: ₱3,200\n• Top services: Hair Coloring, Premium Haircut\n• Recommend: Email campaigns for inactive customers\n\nI can create a retention strategy for you!';
-    }
-    
-    if (query.includes('improve') || query.includes('growth') || query.includes('better')) {
-      return '🚀 Growth Recommendations:\n\n• Increase revenue by 25%: Focus on upselling during appointments\n• Reduce no-shows: Implement SMS reminders (current: 12% no-show rate)\n• Expand offerings: Add seasonal packages\n• Optimize pricing: Review competitor rates\n\nWant a detailed growth plan?';
-    }
-    
-    if (query.includes('service') || query.includes('popular') || query.includes('best')) {
-      return '✨ Service Performance:\n\n• Most Popular: Hair Coloring (₱2,500 avg)\n• Highest Margin: Premium Haircut (75% margin)\n• Underperforming: Facial Treatment (only 5% bookings)\n• Recommendation: Promote Facial Treatment bundles\n\nWould you like service-specific strategies?';
-    }
-    
-    if (query.includes('help') || query.includes('how') || query.includes('what')) {
-      return '💡 I can help you with:\n\n• Revenue optimization strategies\n• Peak time analysis and scheduling\n• Customer retention tactics\n• Service performance insights\n• Growth recommendations\n• Pricing optimization\n\nWhat would you like to explore?';
-    }
-    
-    return '🤖 I\'m analyzing your salon\'s data to provide personalized insights. Try asking about:\n\n• Revenue trends and optimization\n• Peak hours and scheduling\n• Customer retention strategies\n• Service performance\n• Growth opportunities\n\nWhat specific area would you like insights on?';
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
@@ -92,9 +120,9 @@ export function AnalyticsAIChatbot() {
   };
 
   const quickActions = [
-    { icon: TrendingUp, text: 'Revenue Insights', query: 'Tell me about revenue trends' },
-    { icon: BarChart3, text: 'Peak Hours', query: 'What are my peak hours?' },
-    { icon: Lightbulb, text: 'Growth Tips', query: 'How can I improve my business?' },
+    { icon: TrendingUp, text: 'Revenue Insights', query: 'Tell me about revenue trends and optimization strategies' },
+    { icon: BarChart3, text: 'Peak Hours', query: 'What are my peak hours and how can I optimize scheduling?' },
+    { icon: Lightbulb, text: 'Growth Tips', query: 'How can I improve my business and increase revenue?' },
   ];
 
   return (
@@ -145,16 +173,81 @@ export function AnalyticsAIChatbot() {
           </div>
 
           {/* Quick Actions */}
-          {messages.length === 1 && (
+          {messages.length === 1 && !isLoading && (
             <div className="analytics-chatbot-quick-actions">
               {quickActions.map((action, index) => (
                 <button
                   key={index}
                   className="analytics-chatbot-quick-action"
-                  onClick={() => {
+                  onClick={async () => {
                     setInputValue(action.query);
-                    setTimeout(() => handleSend(), 100);
+                    // Small delay to allow state to update before sending
+                    await new Promise(resolve => setTimeout(resolve, 50));
+                    const queryToSend = action.query;
+                    setInputValue('');
+                    
+                    const userMessage: Message = {
+                      id: Date.now().toString(),
+                      text: queryToSend,
+                      sender: 'user',
+                      timestamp: new Date(),
+                    };
+                    setMessages((prev) => [...prev, userMessage]);
+                    setIsLoading(true);
+
+                    try {
+                      if (!isGeminiConfigured()) {
+                        const errorMessage: Message = {
+                          id: (Date.now() + 1).toString(),
+                          text: 'Sorry, the AI service is not configured. Please ensure VITE_GEMINI_API_KEY is set in your environment variables.',
+                          sender: 'bot',
+                          timestamp: new Date(),
+                        };
+                        setMessages((prev) => [...prev, errorMessage]);
+                        setIsLoading(false);
+                        return;
+                      }
+
+                      const businessContext = `
+You are a specialized AI Business Insights Assistant for a salon management platform. 
+Your role is to provide actionable business insights, revenue optimization strategies, 
+customer retention tactics, and growth recommendations based on salon business data.
+
+Focus areas:
+- Revenue trends and optimization strategies
+- Peak hours and scheduling optimization
+- Customer retention and loyalty programs
+- Service performance analysis
+- Growth opportunities and recommendations
+- Pricing strategies
+
+Keep responses concise, actionable, and formatted with bullet points where appropriate.
+Use emojis sparingly for visual appeal (📊, ⏰, 👥, 🚀, ✨, 💡).
+`;
+
+                      const geminiResponse = await generateBusinessInsights(businessContext, queryToSend);
+                      
+                      const botMessage: Message = {
+                        id: (Date.now() + 1).toString(),
+                        text: geminiResponse.text,
+                        sender: 'bot',
+                        timestamp: new Date(),
+                      };
+                      setMessages((prev) => [...prev, botMessage]);
+                    } catch (error) {
+                      console.error('Error generating response:', error);
+                      const errorMessage: Message = {
+                        id: (Date.now() + 1).toString(),
+                        text: 'Sorry, I encountered an error processing your request. Please try again.',
+                        sender: 'bot',
+                        timestamp: new Date(),
+                      };
+                      setMessages((prev) => [...prev, errorMessage]);
+                    } finally {
+                      setIsLoading(false);
+                    }
                   }}
+                  disabled={isLoading}
                 >
                   <action.icon size={16} />
                   <span>{action.text}</span>
@@ -170,15 +263,20 @@ export function AnalyticsAIChatbot() {
               value={inputValue}
               onChange={(e) => setInputValue(e.target.value)}
               onKeyPress={handleKeyPress}
-              placeholder="Ask about revenue, peak hours, growth tips..."
+              placeholder={isLoading ? "Thinking..." : "Ask about revenue, peak hours, growth tips..."}
               className="analytics-chatbot-input"
+              disabled={isLoading}
             />
             <button
               onClick={handleSend}
               className="analytics-chatbot-send"
-              disabled={!inputValue.trim()}
+              disabled={!inputValue.trim() || isLoading}
             >
-              <Send size={18} />
+              {isLoading ? (
+                <div className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full" />
+              ) : (
+                <Send size={18} />
+              )}
             </button>
           </div>
         </div>

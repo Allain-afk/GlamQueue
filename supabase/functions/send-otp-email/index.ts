@@ -175,7 +175,7 @@ If you didn't request this code, please ignore this email.
     console.log('Brevo API response status:', response.status, response.statusText)
 
     // Parse response - handle both success and error cases
-    let responseData: any = {}
+    let responseData: Record<string, unknown> = {}
     try {
       const contentType = response.headers.get('content-type')
       const responseText = await response.text()
@@ -203,7 +203,7 @@ If you didn't request this code, please ignore this email.
       console.error('Brevo API error:', JSON.stringify(responseData, null, 2))
       
       let errorMessage = 'Failed to send email'
-      let errorDetails = responseData
+      const errorDetails = responseData
       let fixInstructions = 'Check: 1) BREVO_API_KEY is correct, 2) FROM_EMAIL is set, 3) Brevo account is active'
       
       if (responseData.message) {

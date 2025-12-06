@@ -17,8 +17,8 @@ import {
   type AnalyticsData,
 } from '../../api/admin';
 
-interface CachedData {
-  data: any;
+interface CachedData<T = unknown> {
+  data: T;
   timestamp: number;
 }
 
@@ -90,7 +90,7 @@ export function AdminDataProvider({ children }: { children: ReactNode }) {
     return Date.now() - cached.timestamp < CACHE_DURATION;
   };
 
-  const updateCache = (key: string, data: any) => {
+  const updateCache = <T,>(key: string, data: T) => {
     setCache(prev => ({
       ...prev,
       [key]: { data, timestamp: Date.now() }

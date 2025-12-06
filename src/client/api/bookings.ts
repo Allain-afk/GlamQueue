@@ -91,6 +91,7 @@ export async function getMyBookings(): Promise<Booking[]> {
   }
   
   // Map database response to client type
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   return (data || []).map((booking: any) => ({
     ...booking,
     id: String(booking.id),
@@ -130,6 +131,7 @@ export async function getUpcomingBookings(): Promise<Booking[]> {
   }
   
   // Map database response to client type
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   return (data || []).map((booking: any) => ({
     ...booking,
     id: String(booking.id),
