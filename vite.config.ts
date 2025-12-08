@@ -20,6 +20,7 @@ export default defineConfig({
         scope: '/',
         start_url: '/',
         icons: [
+          // Standard PWA icons (Android)
           {
             src: '/icons/icon-72x72.png',
             sizes: '72x72',
@@ -68,6 +69,7 @@ export default defineConfig({
             type: 'image/png',
             purpose: 'any'
           },
+          // Maskable icons (Android adaptive)
           {
             src: '/icons/icon-192x192.png',
             sizes: '192x192',
@@ -79,6 +81,31 @@ export default defineConfig({
             sizes: '512x512',
             type: 'image/png',
             purpose: 'maskable'
+          },
+          // iOS-optimized icons (full-bleed)
+          {
+            src: '/icons/apple-touch-icon-120x120.png',
+            sizes: '120x120',
+            type: 'image/png',
+            purpose: 'any'
+          },
+          {
+            src: '/icons/apple-touch-icon-167x167.png',
+            sizes: '167x167',
+            type: 'image/png',
+            purpose: 'any'
+          },
+          {
+            src: '/icons/apple-touch-icon-180x180.png',
+            sizes: '180x180',
+            type: 'image/png',
+            purpose: 'any'
+          },
+          {
+            src: '/icons/apple-touch-icon-1024x1024.png',
+            sizes: '1024x1024',
+            type: 'image/png',
+            purpose: 'any'
           }
         ],
         shortcuts: [
