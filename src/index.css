@@ -1,5 +1,14 @@
+/* Import Mobile-First Foundation (Design System) */
+@import "./styles/base/mobile-first-foundation.css";
+
 /* Import Redesigned Landing Page Styles */
 @import "./styles/components/redesigned-landing.css";
+
+/* Import Mobile Navigation Components */
+@import "./styles/components/mobile-first.css";
+
+/* Import Global Responsive Utilities */
+@import "./styles/components/global-responsive.css";
 
 @tailwind base;
 @tailwind components;
@@ -30,6 +39,12 @@ body {
   -webkit-user-select: none;
   -webkit-overflow-scrolling: touch;
   overscroll-behavior-y: none;
+  
+  /* Prevent horizontal scroll */
+  overflow-x: hidden;
+  width: 100%;
+  max-width: 100vw;
+  position: relative;
 }
 
 /* Mobile: Allow text selection in inputs */
@@ -254,4 +269,173 @@ img {
 .status-cancelled {
   background: #fee2e2;
   color: #991b1b;
+}
+
+/* ========================================
+   TAILWIND MOBILE RESPONSIVE EXTENSIONS
+   Applied via @layer to work with Tailwind
+   ======================================== */
+
+@layer utilities {
+  /* Mobile stack utility */
+  @media (max-width: 767px) {
+    .sm\:flex-col {
+      flex-direction: column;
+    }
+  }
+
+  /* Scrollbar hide utility */
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* Touch scroll container */
+  .touch-scroll {
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
+  }
+
+  /* Safe area utilities */
+  .pb-safe {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+
+  .pt-safe {
+    padding-top: env(safe-area-inset-top);
+  }
+
+  /* Mobile text utilities */
+  .text-balance {
+    text-wrap: balance;
+  }
+
+  /* Touch target minimum size */
+  .touch-target {
+    min-height: 44px;
+    min-width: 44px;
+  }
+}
+
+/* ========================================
+   COMPONENT-SPECIFIC MOBILE OVERRIDES
+   Target specific Tailwind class combinations
+   ======================================== */
+
+/* Stats cards on admin dashboard - responsive grid */
+@media (max-width: 767px) {
+  .grid.grid-cols-1.md\:grid-cols-2.lg\:grid-cols-4 {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.75rem;
+  }
+
+  .grid.grid-cols-1.md\:grid-cols-2.lg\:grid-cols-4 > div {
+    padding: 1rem;
+  }
+
+  .grid.grid-cols-1.md\:grid-cols-2.lg\:grid-cols-4 .text-3xl {
+    font-size: 1.5rem;
+  }
+}
+
+@media (max-width: 400px) {
+  .grid.grid-cols-1.md\:grid-cols-2.lg\:grid-cols-4 {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Main content grid - collapse properly */
+@media (max-width: 1024px) {
+  .grid.grid-cols-1.lg\:grid-cols-3 {
+    grid-template-columns: 1fr;
+  }
+
+  .grid.grid-cols-1.lg\:grid-cols-3 .lg\:col-span-2 {
+    grid-column: span 1;
+  }
+}
+
+/* Client cards grid - 3 columns to 1 on mobile */
+@media (max-width: 767px) {
+  .grid.grid-cols-1.md\:grid-cols-2.lg\:grid-cols-3 {
+    grid-template-columns: 1fr;
+  }
+
+  /* Service explore cards */
+  .grid.grid-cols-1.md\:grid-cols-2.lg\:grid-cols-3 .h-56 {
+    height: 12rem;
+  }
+}
+
+/* Admin 6-column stats */
+@media (max-width: 767px) {
+  .grid.grid-cols-1.md\:grid-cols-6 {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.75rem;
+  }
+
+  .grid.grid-cols-1.md\:grid-cols-6 .md\:col-span-2 {
+    grid-column: span 2;
+  }
+}
+
+@media (max-width: 400px) {
+  .grid.grid-cols-1.md\:grid-cols-6 {
+    grid-template-columns: 1fr;
+  }
+
+  .grid.grid-cols-1.md\:grid-cols-6 .md\:col-span-2 {
+    grid-column: span 1;
+  }
+}
+
+/* Category tabs horizontal scroll */
+@media (max-width: 767px) {
+  .flex.gap-2.overflow-x-auto {
+    padding-bottom: 0.5rem;
+    margin-bottom: -0.5rem;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .flex.gap-2.overflow-x-auto::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+/* Header actions - stack on small mobile */
+@media (max-width: 480px) {
+  .flex.items-center.space-x-3,
+  .flex.items-center.gap-3 {
+    gap: 0.5rem;
+  }
+
+  .flex.items-center.space-x-3 > button,
+  .flex.items-center.gap-3 > button {
+    padding: 0.5rem;
+  }
+}
+
+/* Tables - horizontal scroll on mobile */
+@media (max-width: 767px) {
+  .overflow-x-auto table {
+    min-width: 600px;
+  }
+
+  /* Table cells - tighter on mobile */
+  table th,
+  table td {
+    padding: 0.75rem 0.5rem;
+    font-size: 0.8125rem;
+  }
+}
+
+/* Chart containers - ensure full width */
+@media (max-width: 767px) {
+  .recharts-responsive-container {
+    min-height: 200px !important;
+  }
 }

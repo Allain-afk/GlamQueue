@@ -224,14 +224,16 @@ export function AdminLogin({ onLoginSuccess, onClientLogin, onBackToLanding, onN
                       required={!isSignUp}
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
-                      className="admin-input pr-12"
+                      className="admin-input"
+                      style={{ paddingRight: '48px' }}
                       placeholder={isSignUp ? 'Create a password (min. 6 characters)' : 'Enter your password'}
                       minLength={isSignUp ? 6 : undefined}
                     />
                     <button
                       type="button"
-                      className="absolute inset-y-0 right-0 pr-3 flex items-center"
+                      className="absolute top-1/2 -translate-y-1/2 right-3 p-1 flex items-center justify-center"
                       onClick={() => setShowPassword(!showPassword)}
+                      tabIndex={-1}
                     >
                       {showPassword ? (
                         <EyeOff className="h-5 w-5 text-gray-400 hover:text-gray-600" />
@@ -256,13 +258,15 @@ export function AdminLogin({ onLoginSuccess, onClientLogin, onBackToLanding, onN
                         required
                         value={confirmPassword}
                         onChange={(e) => setConfirmPassword(e.target.value)}
-                        className="admin-input pr-12"
+                        className="admin-input"
+                        style={{ paddingRight: '48px' }}
                         placeholder="Confirm your password"
                       />
                       <button
                         type="button"
-                        className="absolute inset-y-0 right-0 pr-3 flex items-center"
+                        className="absolute top-1/2 -translate-y-1/2 right-3 p-1 flex items-center justify-center"
                         onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                        tabIndex={-1}
                       >
                         {showConfirmPassword ? (
                           <EyeOff className="h-5 w-5 text-gray-400 hover:text-gray-600" />

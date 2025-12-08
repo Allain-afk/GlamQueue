@@ -8,12 +8,21 @@ import { StaffScreen } from '../screens/StaffScreen';
 import { NotificationDropdown } from '../../components/NotificationDropdown';
 import { SettingsDropdown } from '../../components/SettingsDropdown';
 import { AvatarDropdown } from '../../components/AvatarDropdown';
+import { ManagerBottomNav, type ManagerNavItem } from '../../components/mobile';
 
 interface ManagerDashboardProps {
   onLogout: () => void;
 }
 
 type TabType = 'dashboard' | 'appointments' | 'clients' | 'staff';
+
+// Map TabType to ManagerNavItem
+const tabToNavItem: Record<TabType, ManagerNavItem> = {
+  dashboard: 'dashboard',
+  appointments: 'dashboard',
+  clients: 'team',
+  staff: 'team',
+};
 
 export function ManagerDashboard({ onLogout }: ManagerDashboardProps) {
   const [profile, setProfile] = useState<Profile | null>(null);
@@ -55,6 +64,24 @@ export function ManagerDashboard({ onLogout }: ManagerDashboardProps) {
     { id: 'clients' as TabType, label: 'Clients' },
     { id: 'staff' as TabType, label: 'Staff' },
   ];
+
+  // Handle mobile navigation
+  const handleMobileNavigate = (item: ManagerNavItem) => {
+    switch (item) {
+      case 'dashboard':
+        setActiveTab('dashboard');
+        break;
+      case 'team':
+        setActiveTab('staff');
+        break;
+      case 'reports':
+        setActiveTab('appointments');
+        break;
+      case 'more':
+        setActiveTab('clients');
+        break;
+    }
+  };
 
   const ActiveScreen = () => {
     switch (activeTab) {
@@ -98,10 +125,10 @@ export function ManagerDashboard({ onLogout }: ManagerDashboardProps) {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-pink-50 via-white to-purple-50">
+    <div className="min-h-screen bg-gradient-to-br from-pink-50 via-white to-purple-50 mobile-layout">
       {/* Header */}
-      <header className="bg-white border-b border-gray-200 sticky top-0 z-50 shadow-sm">
-        <div className="max-w-[1600px] mx-auto px-6 py-4">
+      <header className="bg-white border-b border-gray-200 sticky top-0 z-50 shadow-sm safe-area-top">
+        <div className="max-w-[1600px] mx-auto px-4 md:px-6 py-4">
           <div className="flex items-center justify-between">
             {/* Logo */}
             <div className="flex items-center space-x-3">
@@ -116,7 +143,7 @@ export function ManagerDashboard({ onLogout }: ManagerDashboardProps) {
               </div>
             </div>
 
-            {/* Search Bar */}
+            {/* Search Bar - Desktop only */}
             <div className="hidden md:block flex-1 max-w-xl mx-8">
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
@@ -129,12 +156,12 @@ export function ManagerDashboard({ onLogout }: ManagerDashboardProps) {
             </div>
 
             {/* Right Actions */}
-            <div className="flex items-center space-x-3">
+            <div className="flex items-center space-x-2 md:space-x-3">
               <NotificationDropdown role="manager" />
               
               <SettingsDropdown onLogout={onLogout} role="manager" />
 
-              <div className="h-8 w-px bg-gray-200"></div>
+              <div className="h-8 w-px bg-gray-200 hidden md:block"></div>
 
               {/* User Profile */}
               <AvatarDropdown profile={profile} onLogout={onLogout} role="manager" />
@@ -143,8 +170,8 @@ export function ManagerDashboard({ onLogout }: ManagerDashboardProps) {
         </div>
       </header>
 
-      {/* Tabs */}
-      <div className="bg-white border-b border-gray-200">
+      {/* Tabs - Desktop only */}
+      <div className="bg-white border-b border-gray-200 desktop-only">
         <div className="max-w-[1600px] mx-auto px-6">
           <div className="flex space-x-1">
             {tabs.map((tab) => (
@@ -153,13 +180,13 @@ export function ManagerDashboard({ onLogout }: ManagerDashboardProps) {
                 onClick={() => setActiveTab(tab.id)}
                 className={`px-6 py-4 font-medium text-sm transition-colors relative ${
                   activeTab === tab.id
-                    ? 'text-pink-600'
+                    ? 'text-[#FF5A5F]'
                     : 'text-gray-600 hover:text-gray-900'
                 }`}
               >
                 {tab.label}
                 {activeTab === tab.id && (
-                  <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-pink-500 to-purple-600"></div>
+                  <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#FF5A5F]"></div>
                 )}
               </button>
             ))}
@@ -167,10 +194,21 @@ export function ManagerDashboard({ onLogout }: ManagerDashboardProps) {
         </div>
       </div>
 
+      {/* Mobile Tab Title */}
+      <div className="mobile-only bg-white border-b border-gray-100 px-4 py-3">
+        <h2 className="text-lg font-semibold text-gray-900 capitalize">{activeTab}</h2>
+      </div>
+
       {/* Content */}
-      <main className="max-w-[1600px] mx-auto px-6 py-8">
+      <main className="max-w-[1600px] mx-auto px-4 md:px-6 py-4 md:py-8">
         <ActiveScreen />
       </main>
+
+      {/* Mobile Bottom Navigation */}
+      <ManagerBottomNav 
+        activeItem={tabToNavItem[activeTab]} 
+        onNavigate={handleMobileNavigate} 
+      />
     </div>
   );
 }

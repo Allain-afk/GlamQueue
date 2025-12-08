@@ -182,8 +182,8 @@ export function BookingsScreen() {
         </div>
       </div>
 
-      {/* Appointments List */}
-      <div className="bg-white rounded-xl shadow-sm border border-pink-100 overflow-hidden">
+      {/* Appointments List - Desktop */}
+      <div className="hidden md:block bg-white rounded-xl shadow-sm border border-pink-100 overflow-hidden">
         <div className="divide-y divide-gray-200">
           {filteredAppointments.map((apt) => (
             <div key={apt.id} className="p-6 hover:bg-gray-50 transition-colors">
@@ -247,6 +247,92 @@ export function BookingsScreen() {
           <div className="text-center py-12 text-gray-500">
             No appointments found
           </div>
+        )}
+      </div>
+
+      {/* Mobile Agenda List */}
+      <div className="md:hidden space-y-3">
+        {filteredAppointments.length === 0 ? (
+          <div className="bg-white rounded-xl p-8 text-center border border-pink-100">
+            <Calendar className="w-12 h-12 text-gray-300 mx-auto mb-3" />
+            <p className="text-gray-500">No appointments found</p>
+          </div>
+        ) : (
+          filteredAppointments.map((apt) => (
+            <div key={apt.id} className="bg-white rounded-xl shadow-sm border border-pink-100 overflow-hidden">
+              {/* Time Header */}
+              <div className="bg-gradient-to-r from-pink-50 to-purple-50 px-4 py-2 border-b border-pink-100">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Clock className="w-4 h-4 text-[#FF5A5F]" />
+                    <span className="font-bold text-gray-900">{formatTime(apt.start_at)}</span>
+                  </div>
+                  <span className="text-xs text-gray-500">{formatDate(apt.start_at)}</span>
+                </div>
+              </div>
+              
+              {/* Card Content */}
+              <div className="p-4">
+                <div className="flex items-start justify-between mb-3">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 bg-gradient-to-br from-pink-400 to-purple-500 rounded-full flex items-center justify-center text-white font-semibold">
+                      {apt.client_name?.charAt(0).toUpperCase()}
+                    </div>
+                    <div className="text-left">
+                      <h3 className="font-semibold text-gray-900">{apt.client_name}</h3>
+                      <p className="text-sm text-gray-600">{apt.service_name}</p>
+                    </div>
+                  </div>
+                  <span className={`px-2 py-1 text-xs rounded-full border ${getStatusColor(apt.status)}`}>
+                    {apt.status}
+                  </span>
+                </div>
+
+                <div className="flex items-center justify-between text-sm text-gray-600 mb-3">
+                  <span>{formatCurrency(apt.service_price || 500)}</span>
+                </div>
+
+                {apt.notes && (
+                  <p className="text-sm text-gray-500 italic mb-3 text-left">"{apt.notes}"</p>
+                )}
+
+                {/* Action Buttons */}
+                <div className="flex gap-2">
+                  {apt.status === 'pending' && (
+                    <>
+                      <button
+                        onClick={() => handleStatusUpdate(apt.id, 'confirmed')}
+                        className="flex-1 py-2.5 bg-green-500 text-white rounded-lg font-medium hover:bg-green-600 transition-colors flex items-center justify-center gap-2"
+                      >
+                        <Check className="w-4 h-4" />
+                        Approve
+                      </button>
+                      <button
+                        onClick={() => handleStatusUpdate(apt.id, 'cancelled')}
+                        className="flex-1 py-2.5 bg-red-500 text-white rounded-lg font-medium hover:bg-red-600 transition-colors flex items-center justify-center gap-2"
+                      >
+                        <X className="w-4 h-4" />
+                        Reject
+                      </button>
+                    </>
+                  )}
+                  {apt.status === 'confirmed' && (
+                    <button
+                      onClick={() => handleStatusUpdate(apt.id, 'completed')}
+                      className="w-full py-2.5 bg-blue-500 text-white rounded-lg font-medium hover:bg-blue-600 transition-colors"
+                    >
+                      Mark as Done
+                    </button>
+                  )}
+                  {(apt.status === 'completed' || apt.status === 'cancelled') && (
+                    <div className="w-full py-2.5 text-center text-gray-400 text-sm">
+                      No actions available
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          ))
         )}
       </div>
     </div>

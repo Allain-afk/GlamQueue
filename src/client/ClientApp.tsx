@@ -10,9 +10,19 @@ import { useAuth } from '../auth/useAuth';
 import { getPendingBooking, clearPendingBooking } from '../utils/bookingStorage';
 import { mapBookingDataToIds, parseTimeToDateTime } from '../utils/bookingMapper';
 import { createBooking } from './api/bookings';
+import { MobileBottomNav, type MobileNavItem } from '../components/mobile';
 import type { Service } from './types';
 
 type ClientView = 'home' | 'explore' | 'booking' | 'schedule' | 'profile';
+
+// Map ClientView to MobileNavItem
+const viewToNavItem: Record<ClientView, MobileNavItem> = {
+  home: 'home',
+  explore: 'explore',
+  booking: 'explore',
+  schedule: 'schedule',
+  profile: 'more',
+};
 
 interface ClientAppProps {
   onBackToLanding: () => void;
@@ -144,6 +154,25 @@ export function ClientApp({ onLogout, onRequireLogin }: ClientAppProps) {
     }
   };
 
+  // Handle mobile navigation
+  const handleMobileNavigate = (item: MobileNavItem) => {
+    switch (item) {
+      case 'home':
+        setCurrentView('home');
+        break;
+      case 'explore':
+        setCurrentView('explore');
+        break;
+      case 'schedule':
+        setCurrentView('schedule');
+        break;
+      case 'more':
+        setCurrentView('profile');
+        break;
+    }
+    setSelectedService(null);
+  };
+
   // Don't render if not authenticated
   if (!session) {
     return null;
@@ -151,8 +180,15 @@ export function ClientApp({ onLogout, onRequireLogin }: ClientAppProps) {
 
   return (
     <ClientProvider>
-      <div className="min-h-screen">
+      <div className="min-h-screen mobile-layout">
         {renderView()}
+        
+        {/* Mobile Bottom Navigation - only visible on mobile */}
+        <MobileBottomNav 
+          activeItem={viewToNavItem[currentView]} 
+          onNavigate={handleMobileNavigate} 
+        />
+        
         {showSuccessModal && (
           <BookingSuccessModal
             bookingId={bookingId}

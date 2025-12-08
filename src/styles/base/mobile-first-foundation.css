@@ -1,0 +1,522 @@
+/* ========================================
+   MOBILE-FIRST FOUNDATION
+   Professional Responsive Design System
+   
+   Philosophy: 
+   - Base styles = Mobile (320px - 767px)
+   - Use min-width queries to ENHANCE for larger screens
+   - Never fight styles with !important overrides
+   ======================================== */
+
+/* ========================================
+   1. CSS CUSTOM PROPERTIES (Design Tokens)
+   ======================================== */
+
+:root {
+  /* Fluid Typography Scale using clamp() */
+  --fs-xs: clamp(0.75rem, 2vw, 0.8125rem);      /* 12px - 13px */
+  --fs-sm: clamp(0.8125rem, 2.2vw, 0.875rem);   /* 13px - 14px */
+  --fs-base: clamp(0.875rem, 2.5vw, 1rem);      /* 14px - 16px */
+  --fs-lg: clamp(1rem, 2.8vw, 1.125rem);        /* 16px - 18px */
+  --fs-xl: clamp(1.125rem, 3vw, 1.25rem);       /* 18px - 20px */
+  --fs-2xl: clamp(1.25rem, 3.5vw, 1.5rem);      /* 20px - 24px */
+  --fs-3xl: clamp(1.5rem, 4vw, 2rem);           /* 24px - 32px */
+  --fs-4xl: clamp(1.875rem, 5vw, 2.5rem);       /* 30px - 40px */
+  --fs-5xl: clamp(2.25rem, 6vw, 3rem);          /* 36px - 48px */
+
+  /* Fluid Spacing Scale */
+  --space-xs: clamp(0.25rem, 1vw, 0.5rem);      /* 4px - 8px */
+  --space-sm: clamp(0.5rem, 1.5vw, 0.75rem);    /* 8px - 12px */
+  --space-md: clamp(0.75rem, 2vw, 1rem);        /* 12px - 16px */
+  --space-lg: clamp(1rem, 2.5vw, 1.5rem);       /* 16px - 24px */
+  --space-xl: clamp(1.5rem, 3vw, 2rem);         /* 24px - 32px */
+  --space-2xl: clamp(2rem, 4vw, 3rem);          /* 32px - 48px */
+  --space-3xl: clamp(2.5rem, 5vw, 4rem);        /* 40px - 64px */
+
+  /* Container Widths */
+  --container-padding: clamp(1rem, 4vw, 2rem);
+  --container-max: 1200px;
+  --container-wide: 1400px;
+
+  /* Grid */
+  --grid-gap: clamp(0.75rem, 2vw, 1.5rem);
+  --card-min-width: 280px;
+
+  /* Touch Targets (44px minimum for accessibility) */
+  --touch-target: 44px;
+  --touch-target-sm: 36px;
+
+  /* Z-index Scale */
+  --z-dropdown: 100;
+  --z-sticky: 200;
+  --z-fixed: 500;
+  --z-modal-backdrop: 900;
+  --z-modal: 1000;
+  --z-toast: 1100;
+
+  /* Brand Colors */
+  --color-primary: #e91e8c;
+  --color-primary-dark: #d81b60;
+  --color-primary-light: rgba(233, 30, 140, 0.1);
+  --color-accent: #ff5a5f;
+
+  /* Safe Area (iOS) */
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-left: env(safe-area-inset-left, 0px);
+  --safe-right: env(safe-area-inset-right, 0px);
+
+  /* Mobile Nav Height */
+  --mobile-nav-height: 64px;
+}
+
+/* ========================================
+   2. STANDARDIZED CONTAINER
+   Single source of truth for content width
+   ======================================== */
+
+.container {
+  width: 100%;
+  max-width: var(--container-max);
+  margin-inline: auto;
+  padding-inline: var(--container-padding);
+}
+
+.container--wide {
+  max-width: var(--container-wide);
+}
+
+.container--narrow {
+  max-width: 800px;
+}
+
+.container--full {
+  max-width: 100%;
+}
+
+/* ========================================
+   3. BASE LAYOUT (Mobile Default)
+   Single column, fluid width
+   ======================================== */
+
+/* Main content area - accounts for fixed bottom nav on mobile */
+.main-content,
+main,
+[role="main"] {
+  min-height: 100vh;
+  min-height: 100dvh; /* Dynamic viewport height for mobile browsers */
+  padding-bottom: calc(var(--mobile-nav-height) + var(--safe-bottom) + var(--space-md));
+}
+
+/* Remove bottom padding on larger screens where no mobile nav */
+@media (min-width: 768px) {
+  .main-content,
+  main,
+  [role="main"] {
+    padding-bottom: var(--space-xl);
+  }
+}
+
+/* ========================================
+   4. INTELLIGENT GRID SYSTEM
+   Auto-placing responsive grids
+   ======================================== */
+
+/* Base responsive grid - items never get too squashed */
+.responsive-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--grid-gap);
+}
+
+/* Auto-fit grid - items flow naturally */
+.auto-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(var(--card-min-width), 100%), 1fr));
+  gap: var(--grid-gap);
+}
+
+/* Specific column grids - mobile first */
+.grid-cols-responsive-2 {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--grid-gap);
+}
+
+.grid-cols-responsive-3 {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--grid-gap);
+}
+
+.grid-cols-responsive-4 {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--grid-gap);
+}
+
+/* Scale up grids on larger screens */
+@media (min-width: 640px) {
+  .grid-cols-responsive-2 {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .grid-cols-responsive-3 {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .grid-cols-responsive-4 {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (min-width: 768px) {
+  .grid-cols-responsive-3 {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  .grid-cols-responsive-4 {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (min-width: 1024px) {
+  .grid-cols-responsive-4 {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+/* ========================================
+   5. FLEXIBLE FLEXBOX
+   Wrapping by default, no forced stacking
+   ======================================== */
+
+.flex-wrap-responsive {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--grid-gap);
+}
+
+/* Stack items on small mobile only when needed */
+.flex-stack-mobile {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+}
+
+@media (min-width: 640px) {
+  .flex-stack-mobile {
+    flex-direction: row;
+    flex-wrap: wrap;
+  }
+}
+
+/* Space-between with wrap support */
+.flex-between {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--space-sm);
+}
+
+/* ========================================
+   6. TYPOGRAPHY (Fluid Scaling)
+   ======================================== */
+
+.text-fluid-xs { font-size: var(--fs-xs); }
+.text-fluid-sm { font-size: var(--fs-sm); }
+.text-fluid-base { font-size: var(--fs-base); }
+.text-fluid-lg { font-size: var(--fs-lg); }
+.text-fluid-xl { font-size: var(--fs-xl); }
+.text-fluid-2xl { font-size: var(--fs-2xl); }
+.text-fluid-3xl { font-size: var(--fs-3xl); }
+.text-fluid-4xl { font-size: var(--fs-4xl); }
+.text-fluid-5xl { font-size: var(--fs-5xl); }
+
+/* Heading defaults */
+.heading-primary {
+  font-size: var(--fs-4xl);
+  font-weight: 700;
+  line-height: 1.2;
+  letter-spacing: -0.02em;
+}
+
+.heading-secondary {
+  font-size: var(--fs-3xl);
+  font-weight: 700;
+  line-height: 1.25;
+}
+
+.heading-tertiary {
+  font-size: var(--fs-2xl);
+  font-weight: 600;
+  line-height: 1.3;
+}
+
+/* ========================================
+   7. SPACING UTILITIES (Fluid)
+   ======================================== */
+
+.p-fluid-sm { padding: var(--space-sm); }
+.p-fluid-md { padding: var(--space-md); }
+.p-fluid-lg { padding: var(--space-lg); }
+.p-fluid-xl { padding: var(--space-xl); }
+
+.py-fluid-sm { padding-block: var(--space-sm); }
+.py-fluid-md { padding-block: var(--space-md); }
+.py-fluid-lg { padding-block: var(--space-lg); }
+.py-fluid-xl { padding-block: var(--space-xl); }
+
+.px-fluid-sm { padding-inline: var(--space-sm); }
+.px-fluid-md { padding-inline: var(--space-md); }
+.px-fluid-lg { padding-inline: var(--space-lg); }
+.px-fluid-xl { padding-inline: var(--space-xl); }
+
+.gap-fluid-sm { gap: var(--space-sm); }
+.gap-fluid-md { gap: var(--space-md); }
+.gap-fluid-lg { gap: var(--space-lg); }
+.gap-fluid-xl { gap: var(--space-xl); }
+
+/* ========================================
+   8. RESPONSIVE VISIBILITY
+   ======================================== */
+
+/* Mobile only (hidden on tablet+) */
+.mobile-only {
+  display: block;
+}
+
+@media (min-width: 768px) {
+  .mobile-only {
+    display: none !important;
+  }
+}
+
+/* Desktop only (hidden on mobile) */
+.desktop-only,
+.desktop-nav-only {
+  display: none;
+}
+
+@media (min-width: 768px) {
+  .desktop-only {
+    display: block;
+  }
+  
+  .desktop-nav-only {
+    display: flex;
+  }
+}
+
+/* Tablet and up */
+.tablet-up {
+  display: none;
+}
+
+@media (min-width: 640px) {
+  .tablet-up {
+    display: block;
+  }
+}
+
+/* ========================================
+   9. FORM ELEMENTS (Touch-Friendly)
+   ======================================== */
+
+/* Base input styles - mobile first */
+.input-base,
+.form-input {
+  width: 100%;
+  min-height: var(--touch-target);
+  padding: var(--space-sm) var(--space-md);
+  font-size: 16px; /* Prevents iOS zoom */
+  border: 2px solid rgba(0, 0, 0, 0.1);
+  border-radius: 8px;
+  background: white;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.input-base:focus,
+.form-input:focus {
+  outline: none;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px var(--color-primary-light);
+}
+
+/* Button base - touch friendly */
+.btn-base {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: var(--touch-target);
+  padding: var(--space-sm) var(--space-lg);
+  font-size: var(--fs-base);
+  font-weight: 600;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.btn-base:active {
+  transform: scale(0.98);
+}
+
+/* Full width button on mobile, auto on larger */
+.btn-responsive {
+  width: 100%;
+}
+
+@media (min-width: 640px) {
+  .btn-responsive {
+    width: auto;
+  }
+}
+
+/* ========================================
+   10. CARD COMPONENT
+   ======================================== */
+
+.card {
+  background: white;
+  border-radius: clamp(12px, 2vw, 16px);
+  padding: var(--space-lg);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+  border: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.card--interactive {
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.card--interactive:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+/* ========================================
+   11. SAFE AREA UTILITIES
+   ======================================== */
+
+.safe-area-top {
+  padding-top: var(--safe-top);
+}
+
+.safe-area-bottom {
+  padding-bottom: var(--safe-bottom);
+}
+
+.safe-area-inset {
+  padding-top: var(--safe-top);
+  padding-bottom: var(--safe-bottom);
+  padding-left: var(--safe-left);
+  padding-right: var(--safe-right);
+}
+
+/* ========================================
+   12. SCROLL CONTAINERS
+   ======================================== */
+
+.scroll-x {
+  overflow-x: auto;
+  overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-x: contain;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.scroll-x::-webkit-scrollbar {
+  display: none;
+}
+
+.scroll-y {
+  overflow-y: auto;
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-y: contain;
+}
+
+/* ========================================
+   13. HEADER / NAVBAR PATTERNS
+   ======================================== */
+
+.header-fixed {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: var(--z-sticky);
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  padding-top: var(--safe-top);
+}
+
+.header-content {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-md);
+  padding: var(--space-md) var(--container-padding);
+  max-width: var(--container-max);
+  margin-inline: auto;
+}
+
+/* Navigation - hidden on mobile by default */
+.nav-desktop {
+  display: none;
+}
+
+@media (min-width: 768px) {
+  .nav-desktop {
+    display: flex;
+    align-items: center;
+    gap: var(--space-lg);
+  }
+}
+
+/* Header actions (login/signup buttons) */
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+}
+
+/* ========================================
+   14. SECTION SPACING
+   ======================================== */
+
+.section {
+  padding-block: var(--space-2xl);
+}
+
+.section--tight {
+  padding-block: var(--space-xl);
+}
+
+.section--loose {
+  padding-block: var(--space-3xl);
+}
+
+/* ========================================
+   15. TABLE RESPONSIVE
+   ======================================== */
+
+.table-responsive {
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.table-responsive table {
+  min-width: 600px; /* Force horizontal scroll on mobile */
+}
+
+@media (min-width: 768px) {
+  .table-responsive table {
+    min-width: 100%;
+  }
+}
+

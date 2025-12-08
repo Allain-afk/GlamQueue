@@ -1,0 +1,631 @@
+/* ========================================
+   MOBILE-FIRST DESIGN SYSTEM
+   Accent Color: #FF5A5F (Coral Red)
+   ======================================== */
+
+:root {
+  --mobile-accent: #ff5a5f;
+  --mobile-accent-light: rgba(255, 90, 95, 0.1);
+  --mobile-accent-hover: #e64a4f;
+  --mobile-nav-height: 64px;
+  --mobile-nav-bg: rgba(255, 255, 255, 0.98);
+  --mobile-shadow: 0 -4px 20px rgba(0, 0, 0, 0.08);
+  --mobile-radius: 16px;
+  --mobile-radius-sm: 12px;
+  --mobile-transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ========================================
+   A. MOBILE BOTTOM NAVIGATION
+   Fixed bottom bar with safe area support
+   ======================================== */
+
+.mobile-bottom-nav {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 1000;
+  background: var(--mobile-nav-bg);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  box-shadow: var(--mobile-shadow);
+  border-top: 1px solid rgba(0, 0, 0, 0.05);
+
+  /* Safe area for iPhone home bar */
+  padding-bottom: env(safe-area-inset-bottom);
+
+  /* Only visible on mobile */
+  display: flex;
+
+  /* Animation */
+  transform: translateY(0);
+  transition: transform 0.3s ease;
+}
+
+/* Hide on desktop (768px+) */
+@media (min-width: 768px) {
+  .mobile-bottom-nav {
+    display: none;
+  }
+}
+
+.mobile-nav-container {
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  width: 100%;
+  height: var(--mobile-nav-height);
+  padding: 0 8px;
+}
+
+.mobile-nav-container--admin {
+  justify-content: space-evenly;
+}
+
+.mobile-nav-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 8px 16px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  border-radius: var(--mobile-radius-sm);
+  transition: var(--mobile-transition);
+  -webkit-tap-highlight-color: transparent;
+  position: relative;
+  min-width: 64px;
+}
+
+.mobile-nav-item:active {
+  transform: scale(0.95);
+  background: var(--mobile-accent-light);
+}
+
+.mobile-nav-icon-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.mobile-nav-icon {
+  width: 24px;
+  height: 24px;
+  color: #94a3b8;
+  transition: var(--mobile-transition);
+}
+
+.mobile-nav-icon--active {
+  color: var(--mobile-accent);
+}
+
+.mobile-nav-indicator {
+  position: absolute;
+  bottom: -8px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 4px;
+  height: 4px;
+  background: var(--mobile-accent);
+  border-radius: 50%;
+  animation: navIndicatorPulse 0.3s ease forwards;
+}
+
+@keyframes navIndicatorPulse {
+  0% {
+    transform: translateX(-50%) scale(0);
+    opacity: 0;
+  }
+  100% {
+    transform: translateX(-50%) scale(1);
+    opacity: 1;
+  }
+}
+
+.mobile-nav-label {
+  font-size: 11px;
+  font-weight: 500;
+  color: #94a3b8;
+  transition: var(--mobile-transition);
+  letter-spacing: -0.01em;
+}
+
+.mobile-nav-label--active {
+  color: var(--mobile-accent);
+  font-weight: 600;
+}
+
+/* ========================================
+   B. HORIZONTAL CATEGORY SCROLL
+   Touch-optimized horizontal scrolling
+   ======================================== */
+
+.horizontal-scroll-section {
+  padding: 16px 0;
+}
+
+.horizontal-scroll-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 16px;
+  margin-bottom: 12px;
+}
+
+.horizontal-scroll-title {
+  font-size: 18px;
+  font-weight: 700;
+  color: #1e293b;
+  letter-spacing: -0.02em;
+}
+
+.horizontal-scroll-see-all {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--mobile-accent);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px 8px;
+  margin: -4px -8px;
+  border-radius: 8px;
+  transition: var(--mobile-transition);
+}
+
+.horizontal-scroll-see-all:hover {
+  background: var(--mobile-accent-light);
+}
+
+.horizontal-scroll-see-all:active {
+  transform: scale(0.98);
+}
+
+.horizontal-scroll-container {
+  overflow-x: auto;
+  overflow-y: hidden;
+
+  /* Hide scrollbar */
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+
+  /* iOS momentum scrolling */
+  -webkit-overflow-scrolling: touch;
+
+  /* Prevent pull-to-refresh interference */
+  overscroll-behavior-x: contain;
+}
+
+.horizontal-scroll-container::-webkit-scrollbar {
+  display: none;
+}
+
+.horizontal-scroll-track {
+  display: flex;
+  gap: 12px;
+  padding: 4px 16px 8px;
+
+  /* Allow items to not shrink */
+  width: max-content;
+}
+
+.category-pill {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 16px;
+  background: white;
+  border: 1px solid #f1f5f9;
+  border-radius: var(--mobile-radius);
+  cursor: pointer;
+  transition: var(--mobile-transition);
+  min-width: 80px;
+  -webkit-tap-highlight-color: transparent;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+.category-pill:hover {
+  border-color: var(--category-color, var(--mobile-accent));
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  transform: translateY(-2px);
+}
+
+.category-pill:active {
+  transform: scale(0.96) translateY(0);
+}
+
+.category-pill--active {
+  background: var(--category-color-light, var(--mobile-accent-light));
+  border-color: var(--category-color, var(--mobile-accent));
+}
+
+.category-icon-wrapper {
+  width: 48px;
+  height: 48px;
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: var(--mobile-transition);
+}
+
+.category-icon {
+  transition: var(--mobile-transition);
+}
+
+.category-name {
+  font-size: 12px;
+  font-weight: 600;
+  color: #475569;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.category-pill--active .category-name {
+  color: var(--category-color, var(--mobile-accent));
+}
+
+/* ========================================
+   C. DASHBOARD GRID (4-COLUMN)
+   Business action buttons
+   ======================================== */
+
+.dashboard-grid-section {
+  padding: 16px;
+}
+
+.dashboard-grid-title {
+  font-size: 18px;
+  font-weight: 700;
+  color: #1e293b;
+  margin-bottom: 16px;
+  letter-spacing: -0.02em;
+}
+
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+}
+
+/* Responsive: 3 columns on very small screens */
+@media (max-width: 360px) {
+  .dashboard-grid {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+  }
+}
+
+.dashboard-grid-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 16px 8px;
+  background: white;
+  border: 1px solid #f1f5f9;
+  border-radius: var(--mobile-radius);
+  cursor: pointer;
+  transition: var(--mobile-transition);
+  -webkit-tap-highlight-color: transparent;
+  aspect-ratio: 1;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+.dashboard-grid-item:hover {
+  border-color: var(--action-color, var(--mobile-accent));
+  box-shadow: 0 4px 16px var(--action-color-light, var(--mobile-accent-light));
+  transform: translateY(-2px);
+}
+
+.dashboard-grid-item:active {
+  transform: scale(0.96);
+  background: var(--action-color-light, var(--mobile-accent-light));
+}
+
+.dashboard-grid-icon-wrapper {
+  position: relative;
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: var(--action-color-light, var(--mobile-accent-light));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.dashboard-grid-icon {
+  color: var(--action-color, var(--mobile-accent));
+  transition: var(--mobile-transition);
+}
+
+.dashboard-grid-badge {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  background: var(--mobile-accent);
+  color: white;
+  font-size: 10px;
+  font-weight: 700;
+  border-radius: 9px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid white;
+  box-shadow: 0 2px 4px rgba(255, 90, 95, 0.3);
+}
+
+.dashboard-grid-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: #475569;
+  text-align: center;
+  line-height: 1.2;
+}
+
+/* ========================================
+   MOBILE LAYOUT UTILITIES
+   Content spacing for bottom nav
+   ======================================== */
+
+/* Add padding to main content when mobile nav is visible */
+.mobile-layout {
+  min-height: 100vh;
+  padding-bottom: calc(var(--mobile-nav-height) + env(safe-area-inset-bottom));
+}
+
+@media (min-width: 768px) {
+  .mobile-layout {
+    padding-bottom: 0;
+  }
+}
+
+/* Hide desktop sidebar on mobile */
+.desktop-sidebar {
+  display: none;
+}
+
+@media (min-width: 768px) {
+  .desktop-sidebar {
+    display: flex;
+  }
+}
+
+/* Show mobile header on mobile only */
+.mobile-header {
+  display: block;
+}
+
+@media (min-width: 768px) {
+  .mobile-header {
+    display: none;
+  }
+}
+
+/* Desktop header - hide on mobile when mobile header exists */
+.desktop-header-full {
+  display: none;
+}
+
+@media (min-width: 768px) {
+  .desktop-header-full {
+    display: block;
+  }
+}
+
+/* Mobile-only content sections */
+.mobile-only {
+  display: block;
+}
+
+@media (min-width: 768px) {
+  .mobile-only {
+    display: none;
+  }
+}
+
+/* Desktop-only content sections */
+.desktop-only {
+  display: none;
+}
+
+@media (min-width: 768px) {
+  .desktop-only {
+    display: block;
+  }
+}
+
+/* ========================================
+   MOBILE SCROLL BEHAVIOR
+   Prevent overscroll on iOS
+   ======================================== */
+
+.mobile-scroll-container {
+  height: 100%;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-y: contain;
+}
+
+/* ========================================
+   MOBILE TOUCH STATES
+   Better feedback for touch interactions
+   ======================================== */
+
+.touch-active {
+  transition: transform 0.1s ease, opacity 0.1s ease;
+}
+
+.touch-active:active {
+  transform: scale(0.98);
+  opacity: 0.9;
+}
+
+/* ========================================
+   MOBILE ANIMATIONS
+   Smooth page transitions
+   ======================================== */
+
+@keyframes slideInFromBottom {
+  from {
+    transform: translateY(20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes slideInFromRight {
+  from {
+    transform: translateX(20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+.mobile-animate-in {
+  animation: slideInFromBottom 0.3s ease forwards;
+}
+
+.mobile-animate-in-right {
+  animation: slideInFromRight 0.3s ease forwards;
+}
+
+/* Staggered animation for list items */
+.mobile-stagger-1 {
+  animation-delay: 0.05s;
+}
+.mobile-stagger-2 {
+  animation-delay: 0.1s;
+}
+.mobile-stagger-3 {
+  animation-delay: 0.15s;
+}
+.mobile-stagger-4 {
+  animation-delay: 0.2s;
+}
+.mobile-stagger-5 {
+  animation-delay: 0.25s;
+}
+.mobile-stagger-6 {
+  animation-delay: 0.3s;
+}
+.mobile-stagger-7 {
+  animation-delay: 0.35s;
+}
+.mobile-stagger-8 {
+  animation-delay: 0.4s;
+}
+
+/* ========================================
+   MOBILE SAFE AREAS
+   Additional safe area utilities
+   ======================================== */
+
+.safe-top {
+  padding-top: env(safe-area-inset-top);
+}
+
+.safe-bottom {
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+.safe-left {
+  padding-left: env(safe-area-inset-left);
+}
+
+.safe-right {
+  padding-right: env(safe-area-inset-right);
+}
+
+.safe-all {
+  padding: env(safe-area-inset-top) env(safe-area-inset-right)
+    env(safe-area-inset-bottom) env(safe-area-inset-left);
+}
+
+/* ========================================
+   MOBILE PULL-TO-REFRESH AREA
+   Space for native refresh gesture
+   ======================================== */
+
+.pull-refresh-area {
+  min-height: 60px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #94a3b8;
+  font-size: 12px;
+}
+
+/* ========================================
+   TEXT ALIGNMENT FIXES
+   Ensure content is left-aligned on mobile
+   ======================================== */
+
+/* Default left alignment for text content */
+@media (max-width: 767px) {
+  /* Headings and paragraphs should be left-aligned */
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6,
+  p,
+  span,
+  li {
+    text-align: left;
+  }
+
+  /* Card content left alignment */
+  .bg-white,
+  .rounded-xl,
+  .rounded-2xl {
+    text-align: left;
+  }
+
+  /* Stats and metrics can stay centered */
+  .text-center {
+    text-align: center;
+  }
+
+  /* Override any centered containers except explicitly centered ones */
+  .space-y-6,
+  .space-y-4,
+  .space-y-3,
+  main,
+  section {
+    text-align: left;
+  }
+
+  /* Form labels left aligned */
+  label {
+    text-align: left;
+    display: block;
+  }
+
+  /* Flex items should not center text by default */
+  .flex {
+    text-align: left;
+  }
+
+  /* Button text remains centered */
+  button,
+  .btn,
+  [role="button"] {
+    text-align: center;
+  }
+}

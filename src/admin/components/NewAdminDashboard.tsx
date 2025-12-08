@@ -11,6 +11,7 @@ import { MarketingScreen } from '../screens/MarketingScreen';
 import { NotificationDropdown } from '../../components/NotificationDropdown';
 import { SettingsDropdown } from '../../components/SettingsDropdown';
 import { AvatarDropdown } from '../../components/AvatarDropdown';
+import { AdminBottomNav, type AdminNavItem } from '../../components/mobile';
 
 interface NewAdminDashboardProps {
   onLogout: () => void;
@@ -18,11 +19,42 @@ interface NewAdminDashboardProps {
 
 type TabType = 'dashboard' | 'appointments' | 'clients' | 'staff' | 'analytics' | 'marketing';
 
+// Map TabType to AdminNavItem for mobile navigation
+const tabToNavItem: Record<TabType, AdminNavItem> = {
+  dashboard: 'dashboard',
+  appointments: 'appointments',
+  clients: 'clients',
+  staff: 'more',
+  analytics: 'analytics',
+  marketing: 'more',
+};
+
 export function NewAdminDashboard({ onLogout }: NewAdminDashboardProps) {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [activeTab, setActiveTab] = useState<TabType>('dashboard');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  // Handle mobile navigation
+  const handleMobileNavigate = (item: AdminNavItem) => {
+    switch (item) {
+      case 'dashboard':
+        setActiveTab('dashboard');
+        break;
+      case 'appointments':
+        setActiveTab('appointments');
+        break;
+      case 'clients':
+        setActiveTab('clients');
+        break;
+      case 'analytics':
+        setActiveTab('analytics');
+        break;
+      case 'more':
+        setActiveTab('staff');
+        break;
+    }
+  };
 
   useEffect(() => {
     loadProfile();
@@ -107,7 +139,7 @@ export function NewAdminDashboard({ onLogout }: NewAdminDashboardProps) {
 
   return (
     <AdminDataProvider>
-      <div className="min-h-screen bg-gradient-to-br from-pink-50 via-white to-purple-50">
+      <div className="min-h-screen bg-gradient-to-br from-pink-50 via-white to-purple-50 mobile-layout">
         {/* Header */}
         <header className="bg-white border-b border-gray-200 sticky top-0 z-50 shadow-sm safe-area-top">
         <div className="max-w-[1600px] mx-auto px-6 py-4">
@@ -151,8 +183,8 @@ export function NewAdminDashboard({ onLogout }: NewAdminDashboardProps) {
           </div>
         </div>
 
-        {/* Navigation Tabs */}
-        <div className="max-w-[1600px] mx-auto px-6">
+        {/* Navigation Tabs - Desktop Only (mobile uses bottom nav) */}
+        <div className="max-w-[1600px] mx-auto px-6 desktop-only">
           <nav className="flex space-x-1 -mb-px">
             {tabs.map((tab) => (
               <button
@@ -160,7 +192,7 @@ export function NewAdminDashboard({ onLogout }: NewAdminDashboardProps) {
                 onClick={() => setActiveTab(tab.id)}
                 className={`px-6 py-3 text-sm font-medium border-b-2 transition-colors ${
                   activeTab === tab.id
-                    ? 'border-pink-500 text-pink-600 bg-pink-50'
+                    ? 'border-[#FF5A5F] text-[#FF5A5F] bg-red-50'
                     : 'border-transparent text-gray-600 hover:text-gray-900 hover:border-gray-300'
                 }`}
               >
@@ -169,6 +201,11 @@ export function NewAdminDashboard({ onLogout }: NewAdminDashboardProps) {
             ))}
           </nav>
         </div>
+
+        {/* Mobile Header Title */}
+        <div className="mobile-only px-4 py-2 border-t border-gray-100">
+          <h2 className="text-lg font-semibold text-gray-900 capitalize">{activeTab}</h2>
+        </div>
       </header>
 
         {/* Main Content */}
@@ -176,8 +213,8 @@ export function NewAdminDashboard({ onLogout }: NewAdminDashboardProps) {
           {ActiveScreen}
         </main>
 
-        {/* Footer */}
-        <footer className="max-w-[1600px] mx-auto px-6 py-6 mt-12 border-t border-gray-200 safe-area-bottom">
+        {/* Footer - Desktop Only */}
+        <footer className="max-w-[1600px] mx-auto px-6 py-6 mt-12 border-t border-gray-200 desktop-only">
           <div className="flex items-center justify-between text-sm text-gray-600">
             <p>© 2024 GlamQueue. All rights reserved.</p>
             <div className="flex space-x-6">
@@ -187,6 +224,12 @@ export function NewAdminDashboard({ onLogout }: NewAdminDashboardProps) {
             </div>
           </div>
         </footer>
+
+        {/* Mobile Bottom Navigation - only visible on mobile */}
+        <AdminBottomNav 
+          activeItem={tabToNavItem[activeTab]} 
+          onNavigate={handleMobileNavigate} 
+        />
       </div>
     </AdminDataProvider>
   );

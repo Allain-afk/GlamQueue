@@ -284,7 +284,8 @@ export function RedesignedLandingPage({ onGetStarted, onLogin, onStartOnboarding
             />
           </div>
 
-          <nav className="main-nav">
+          {/* Desktop Navigation - Hidden on mobile via CSS */}
+          <nav className="main-nav desktop-nav-only">
             <ul className="nav-menu">
               <li className="nav-item">
                 <a
@@ -335,7 +336,6 @@ export function RedesignedLandingPage({ onGetStarted, onLogin, onStartOnboarding
           </nav>
 
           <div className="header-actions">
-
             <button className="header-link-btn" onClick={handleLoginClick} disabled={isLoading}>
               Login
             </button>

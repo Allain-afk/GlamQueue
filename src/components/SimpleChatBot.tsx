@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { MessageCircle, X, Send, Bot } from 'lucide-react';
 import { sendMessageToGemini, isGeminiConfigured, type ChatMessage } from '../services/geminiService';
+import '../styles/components/chatbot.css';
 
 interface Message {
   id: string;
@@ -92,72 +93,27 @@ export function SimpleChatBot() {
   };
 
   return (
-    <div style={{ 
-      position: 'fixed', 
-      bottom: '20px', 
-      left: '20px', 
-      zIndex: 1000 
-    }}>
+    <div className="chatbot-container">
       {/* Chat Button */}
       <button 
         onClick={() => setIsOpen(!isOpen)}
-        style={{
-          width: '60px',
-          height: '60px',
-          borderRadius: '50%',
-          background: 'linear-gradient(135deg, #e91e8c, #f06292)',
-          border: 'none',
-          color: 'white',
-          cursor: 'pointer',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          boxShadow: '0 4px 20px rgba(233, 30, 140, 0.4)',
-          transition: 'all 0.3s ease'
-        }}
+        className="chatbot-button"
+        aria-label={isOpen ? "Close chat" : "Open chat"}
       >
         {isOpen ? <X size={24} /> : <MessageCircle size={24} />}
       </button>
 
       {/* Chat Window */}
       {isOpen && (
-        <div style={{
-          position: 'absolute',
-          bottom: '80px',
-          left: '0',
-          width: '350px',
-          height: '500px',
-          background: 'white',
-          borderRadius: '16px',
-          boxShadow: '0 10px 40px rgba(0, 0, 0, 0.15)',
-          display: 'flex',
-          flexDirection: 'column',
-          overflow: 'hidden'
-        }}>
+        <div className="chatbot-window">
           {/* Header */}
-          <div style={{
-            background: 'linear-gradient(135deg, #e91e8c, #f06292)',
-            padding: '16px 20px',
-            color: 'white'
-          }}>
-            <h3 style={{ margin: 0, fontSize: '16px', fontWeight: '600' }}>
-              GlamQueue Assistant
-            </h3>
-            <span style={{ fontSize: '12px', opacity: 0.8 }}>
-              Online
-            </span>
+          <div className="chatbot-header">
+            <h3>GlamQueue Assistant</h3>
+            <span>Online</span>
           </div>
 
           {/* Messages */}
-          <div style={{
-            flex: 1,
-            padding: '20px',
-            background: '#f8f9fa',
-            display: 'flex',
-            flexDirection: 'column',
-            gap: '16px',
-            overflowY: 'auto'
-          }}>
+          <div className="chatbot-messages">
             {messages.map((message) => (
               <div
                 key={message.id}
@@ -204,14 +160,7 @@ export function SimpleChatBot() {
           </div>
 
           {/* Input */}
-          <div style={{
-            padding: '16px 20px',
-            background: 'white',
-            borderTop: '1px solid #e5e5e5',
-            display: 'flex',
-            gap: '12px',
-            alignItems: 'center'
-          }}>
+          <div className="chatbot-input-container">
             <input 
               type="text"
               value={inputValue}
@@ -223,36 +172,13 @@ export function SimpleChatBot() {
               }}
               placeholder={isLoading ? "Thinking..." : "Ask about GlamQueue..."}
               disabled={isLoading}
-              style={{
-                flex: 1,
-                border: '1px solid #e5e5e5',
-                borderRadius: '20px',
-                padding: '12px 16px',
-                fontSize: '14px',
-                outline: 'none',
-                opacity: isLoading ? 0.7 : 1,
-                cursor: isLoading ? 'wait' : 'text'
-              }}
+              className="chatbot-input"
             />
             <button
               onClick={handleSend}
               disabled={!inputValue.trim() || isLoading}
-              style={{
-                width: '40px',
-                height: '40px',
-                borderRadius: '50%',
-                background: (inputValue.trim() && !isLoading)
-                  ? 'linear-gradient(135deg, #e91e8c, #f06292)' 
-                  : '#e5e5e5',
-                border: 'none',
-                color: 'white',
-                cursor: (inputValue.trim() && !isLoading) ? 'pointer' : 'not-allowed',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                transition: 'all 0.2s ease',
-                opacity: isLoading ? 0.6 : 1
-              }}
+              className="chatbot-send"
+              aria-label="Send message"
             >
               {isLoading ? (
                 <div style={{

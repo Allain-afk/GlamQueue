@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Search, MapPin, Calendar, Sparkles, Scissors, Palette, Clock, CheckCircle, XCircle, AlertCircle } from 'lucide-react';
+import { Search, MapPin, Calendar, Scissors, Clock, CheckCircle, XCircle, AlertCircle } from 'lucide-react';
 import { useAuth } from '../../auth/useAuth';
 import { useClient } from '../context/ClientContext';
 import { getMyProfile, type Profile } from '../../api/profile';
@@ -32,12 +32,6 @@ export function ClientHome({ onSelectService, onViewAllServices, onViewSchedule,
     };
     loadProfile();
   }, []);
-
-  const categories = [
-    { id: 'haircut', name: 'Haircut', icon: Scissors, color: '#e91e8c' },
-    { id: 'styling', name: 'Styling', icon: Sparkles, color: '#f06292' },
-    { id: 'coloring', name: 'Coloring', icon: Palette, color: '#ff6b9d' },
-  ];
 
   const featuredServices = services.slice(0, 6);
 
@@ -256,30 +250,6 @@ export function ClientHome({ onSelectService, onViewAllServices, onViewSchedule,
             </div>
           </section>
         )}
-
-        {/* Categories */}
-        <section>
-          <h2 className="text-xl font-bold text-gray-900 mb-4">Categories</h2>
-          <div className="grid grid-cols-3 gap-4">
-            {categories.map((category) => {
-              const Icon = category.icon;
-              return (
-                <button
-                  key={category.id}
-                  className="bg-white rounded-2xl p-6 shadow-sm border border-pink-100 hover:shadow-md hover:border-pink-300 transition-all text-center group"
-                >
-                  <div
-                    className="w-16 h-16 mx-auto rounded-2xl flex items-center justify-center mb-3 group-hover:scale-110 transition-transform"
-                    style={{ background: `linear-gradient(135deg, ${category.color}, ${category.color}dd)` }}
-                  >
-                    <Icon className="w-8 h-8 text-white" />
-                  </div>
-                  <h3 className="font-semibold text-gray-900">{category.name}</h3>
-                </button>
-              );
-            })}
-          </div>
-        </section>
 
         {/* Promo Banner */}
         <section>

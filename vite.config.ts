@@ -8,7 +8,7 @@ export default defineConfig({
     react(),
     VitePWA({
       registerType: 'autoUpdate',
-      includeAssets: ['favicon.ico', 'vite.svg', 'images/*.png'],
+      includeAssets: ['favicon.ico', 'vite.svg', 'images/*.png', 'icons/*.svg'],
       manifest: {
         name: 'GlamQueue - Salon Management',
         short_name: 'GlamQueue',

@@ -1,6 +1,8 @@
 /* Import Redesigned Landing Page Styles */
 @import "./components/redesigned-landing.css";
 @import "./components/chatbot.css";
+@import "./components/mobile-first.css";
+@import "./components/global-responsive.css";
 
 /* Global Styles */
 * {
