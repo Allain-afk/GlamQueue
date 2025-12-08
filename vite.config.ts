@@ -8,7 +8,7 @@ export default defineConfig({
     react(),
     VitePWA({
       registerType: 'autoUpdate',
-      includeAssets: ['favicon.ico', 'vite.svg', 'images/*.png', 'icons/*.svg'],
+      includeAssets: ['favicon.ico', 'vite.svg', 'images/*.png', 'icons/*.png', 'icons/*.svg'],
       manifest: {
         name: 'GlamQueue - Salon Management',
         short_name: 'GlamQueue',
@@ -21,52 +21,64 @@ export default defineConfig({
         start_url: '/',
         icons: [
           {
-            src: '/icons/icon-72x72.svg',
+            src: '/icons/icon-72x72.png',
             sizes: '72x72',
-            type: 'image/svg+xml',
-            purpose: 'maskable any'
+            type: 'image/png',
+            purpose: 'any'
           },
           {
-            src: '/icons/icon-96x96.svg',
+            src: '/icons/icon-96x96.png',
             sizes: '96x96',
-            type: 'image/svg+xml',
-            purpose: 'maskable any'
+            type: 'image/png',
+            purpose: 'any'
           },
           {
-            src: '/icons/icon-128x128.svg',
+            src: '/icons/icon-128x128.png',
             sizes: '128x128',
-            type: 'image/svg+xml',
-            purpose: 'maskable any'
+            type: 'image/png',
+            purpose: 'any'
           },
           {
-            src: '/icons/icon-144x144.svg',
+            src: '/icons/icon-144x144.png',
             sizes: '144x144',
-            type: 'image/svg+xml',
-            purpose: 'maskable any'
+            type: 'image/png',
+            purpose: 'any'
           },
           {
-            src: '/icons/icon-152x152.svg',
+            src: '/icons/icon-152x152.png',
             sizes: '152x152',
-            type: 'image/svg+xml',
-            purpose: 'maskable any'
+            type: 'image/png',
+            purpose: 'any'
           },
           {
-            src: '/icons/icon-192x192.svg',
+            src: '/icons/icon-192x192.png',
             sizes: '192x192',
-            type: 'image/svg+xml',
-            purpose: 'maskable any'
+            type: 'image/png',
+            purpose: 'any'
           },
           {
-            src: '/icons/icon-384x384.svg',
+            src: '/icons/icon-384x384.png',
             sizes: '384x384',
-            type: 'image/svg+xml',
-            purpose: 'maskable any'
+            type: 'image/png',
+            purpose: 'any'
           },
           {
-            src: '/icons/icon-512x512.svg',
+            src: '/icons/icon-512x512.png',
             sizes: '512x512',
-            type: 'image/svg+xml',
-            purpose: 'maskable any'
+            type: 'image/png',
+            purpose: 'any'
+          },
+          {
+            src: '/icons/icon-192x192.png',
+            sizes: '192x192',
+            type: 'image/png',
+            purpose: 'maskable'
+          },
+          {
+            src: '/icons/icon-512x512.png',
+            sizes: '512x512',
+            type: 'image/png',
+            purpose: 'maskable'
           }
         ],
         shortcuts: [
@@ -75,14 +87,14 @@ export default defineConfig({
             short_name: 'Book',
             description: 'Book a new salon appointment',
             url: '/?action=book',
-            icons: [{ src: '/icons/icon-96x96.svg', sizes: '96x96' }]
+            icons: [{ src: '/icons/icon-96x96.png', sizes: '96x96', type: 'image/png' }]
           },
           {
             name: 'My Schedule',
             short_name: 'Schedule',
             description: 'View your appointments',
             url: '/?action=schedule',
-            icons: [{ src: '/icons/icon-96x96.svg', sizes: '96x96' }]
+            icons: [{ src: '/icons/icon-96x96.png', sizes: '96x96', type: 'image/png' }]
           }
         ],
         categories: ['business', 'productivity']

@@ -10,6 +10,9 @@
 /* Import Global Responsive Utilities */
 @import "./styles/components/global-responsive.css";
 
+/* Import PWA Mobile Optimizations */
+@import "./styles/components/pwa-mobile.css";
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
