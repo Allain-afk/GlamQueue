@@ -64,8 +64,8 @@ export function EditProfile({ profile, onClose, onUpdate }: EditProfileProps) {
       }
 
       const updatedProfile = await updateProfile({ 
-        name: name.trim() || null,
-        profile_picture: pictureUrl
+        name: name.trim() || undefined,
+        profile_picture: pictureUrl ?? undefined
       });
       onUpdate(updatedProfile);
       onClose();

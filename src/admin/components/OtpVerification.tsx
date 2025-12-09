@@ -163,6 +163,8 @@ export function OtpVerification({ email, password, onVerificationSuccess, onBack
           const defaultProfile: Profile = {
             id: verifyData.user.id,
             email: verifyData.user.email || null,
+            name: null,
+            profile_picture: null,
             role: 'client',
             created_at: new Date().toISOString(),
           };

@@ -69,9 +69,9 @@ export async function uploadProfilePicture(file: File): Promise<string> {
     // Provide more specific error messages
     if (uploadError.message.includes('row-level security') || uploadError.message.includes('RLS')) {
       throw new Error('Storage permissions not configured. Please contact administrator to set up storage policies.');
-    } else if (uploadError.message.includes('Bucket not found') || uploadError.statusCode === '404') {
+    } else if (uploadError.message.includes('Bucket not found') || uploadError.message.includes('404')) {
       throw new Error('Storage bucket not found. Please create "avatars" bucket in Supabase Storage.');
-    } else if (uploadError.statusCode === '400') {
+    } else if (uploadError.message.includes('400') || uploadError.message.includes('Invalid')) {
       throw new Error('Invalid file or storage configuration. Please check file format and storage settings.');
     }
     

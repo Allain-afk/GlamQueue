@@ -175,7 +175,7 @@ export function NewAdminDashboard({ onLogout }: NewAdminDashboardProps) {
             <div className="flex items-center space-x-3">
               <NotificationDropdown 
                 role="admin" 
-                onNotificationClick={(appointmentId) => {
+                onNotificationClick={(_appointmentId) => {
                   setActiveTab('appointments');
                   // Optionally scroll to the appointment or highlight it
                   // You can add more logic here if needed
