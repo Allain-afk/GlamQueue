@@ -1,4 +1,5 @@
 import { supabase } from '../../lib/supabase';
+import { getServiceImage } from '../../utils/serviceImages';
 import type { Service, Shop } from '../types';
 
 // Mock data for development (remove when database is ready)
@@ -14,7 +15,7 @@ const mockServices: Service[] = [
     shop_name: 'Glam Studio Manila',
     shop_address: 'Makati City, Metro Manila',
     rating: 4.8,
-    image_url: 'https://images.unsplash.com/photo-1562322140-8baeececf3df?w=800&h=600&fit=crop',
+    image_url: getServiceImage('Premium Haircut'),
   },
   {
     id: '2',
@@ -27,7 +28,7 @@ const mockServices: Service[] = [
     shop_name: 'Glam Studio Manila',
     shop_address: 'Makati City, Metro Manila',
     rating: 4.9,
-    image_url: 'https://images.unsplash.com/photo-1560869713-9ca0e9e2c77e?w=800&h=600&fit=crop',
+    image_url: getServiceImage('Hair Coloring'),
   },
   {
     id: '3',
@@ -40,7 +41,7 @@ const mockServices: Service[] = [
     shop_name: 'Beauty Lounge BGC',
     shop_address: 'Bonifacio Global City, Taguig',
     rating: 4.7,
-    image_url: 'https://images.unsplash.com/photo-1605497788044-5a32c7078486?w=800&h=600&fit=crop',
+    image_url: getServiceImage('Keratin Treatment'),
   },
   {
     id: '4',
@@ -53,7 +54,7 @@ const mockServices: Service[] = [
     shop_name: 'Beauty Lounge BGC',
     shop_address: 'Bonifacio Global City, Taguig',
     rating: 4.8,
-    image_url: 'https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?w=800&h=600&fit=crop',
+    image_url: getServiceImage('Hair Styling'),
   },
   {
     id: '5',
@@ -66,7 +67,7 @@ const mockServices: Service[] = [
     shop_name: 'Nail Spa Quezon City',
     shop_address: 'Quezon City, Metro Manila',
     rating: 4.6,
-    image_url: 'https://images.unsplash.com/photo-1604654894610-df63bc536371?w=800&h=600&fit=crop',
+    image_url: getServiceImage('Manicure & Pedicure'),
   },
   {
     id: '6',
@@ -79,7 +80,7 @@ const mockServices: Service[] = [
     shop_name: 'Nail Spa Quezon City',
     shop_address: 'Quezon City, Metro Manila',
     rating: 4.5,
-    image_url: 'https://images.unsplash.com/photo-1616394584738-fc6e612e71b9?w=800&h=600&fit=crop',
+    image_url: getServiceImage('Facial Treatment'),
   },
 ];
 
@@ -145,7 +146,8 @@ export async function getServices(): Promise<Service[]> {
       shop_id: service.shop_id,
       shop_name: service.shop?.name || '',
       shop_address: service.shop?.address || '',
-      image_url: service.image_url,
+      // Use image_url from database if available, otherwise get from local mapping
+      image_url: service.image_url || getServiceImage(service.name),
       rating: service.rating ? Number(service.rating) : undefined,
       created_at: service.created_at,
     })) as Service[];
@@ -203,7 +205,8 @@ export async function getServiceById(id: string): Promise<Service | null> {
       shop_id: data.shop_id,
       shop_name: data.shop?.name || '',
       shop_address: data.shop?.address || '',
-      image_url: data.image_url,
+      // Use image_url from database if available, otherwise get from local mapping
+      image_url: data.image_url || getServiceImage(data.name),
       rating: data.rating ? Number(data.rating) : undefined,
       created_at: data.created_at,
     } as Service;

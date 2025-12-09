@@ -11,6 +11,7 @@ import { MarketingScreen } from '../screens/MarketingScreen';
 import { NotificationDropdown } from '../../components/NotificationDropdown';
 import { SettingsDropdown } from '../../components/SettingsDropdown';
 import { AvatarDropdown } from '../../components/AvatarDropdown';
+import { EditProfile } from '../../components/EditProfile';
 import { AdminBottomNav, type AdminNavItem } from '../../components/mobile';
 
 interface NewAdminDashboardProps {
@@ -34,6 +35,7 @@ export function NewAdminDashboard({ onLogout }: NewAdminDashboardProps) {
   const [activeTab, setActiveTab] = useState<TabType>('dashboard');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [showEditProfile, setShowEditProfile] = useState(false);
 
   // Handle mobile navigation
   const handleMobileNavigate = (item: AdminNavItem) => {
@@ -171,14 +173,30 @@ export function NewAdminDashboard({ onLogout }: NewAdminDashboardProps) {
 
             {/* Right Actions */}
             <div className="flex items-center space-x-3">
-              <NotificationDropdown role="admin" />
+              <NotificationDropdown 
+                role="admin" 
+                onNotificationClick={(appointmentId) => {
+                  setActiveTab('appointments');
+                  // Optionally scroll to the appointment or highlight it
+                  // You can add more logic here if needed
+                }}
+              />
               
-              <SettingsDropdown onLogout={onLogout} role="admin" />
+              <SettingsDropdown 
+                onLogout={onLogout} 
+                onEditProfile={() => setShowEditProfile(true)}
+                role="admin" 
+              />
 
               <div className="h-8 w-px bg-gray-200"></div>
 
               {/* User Profile */}
-              <AvatarDropdown profile={profile} onLogout={onLogout} role="admin" />
+              <AvatarDropdown 
+                profile={profile} 
+                onLogout={onLogout} 
+                onEditProfile={() => setShowEditProfile(true)}
+                role="admin" 
+              />
             </div>
           </div>
         </div>
@@ -230,6 +248,18 @@ export function NewAdminDashboard({ onLogout }: NewAdminDashboardProps) {
           activeItem={tabToNavItem[activeTab]} 
           onNavigate={handleMobileNavigate} 
         />
+
+        {/* Edit Profile Modal */}
+        {showEditProfile && profile && (
+          <EditProfile
+            profile={profile}
+            onClose={() => setShowEditProfile(false)}
+            onUpdate={(updatedProfile) => {
+              setProfile(updatedProfile);
+              setShowEditProfile(false);
+            }}
+          />
+        )}
       </div>
     </AdminDataProvider>
   );

@@ -43,7 +43,7 @@ export function ClientHome({ onSelectService, onViewAllServices, onViewSchedule,
           <div className="flex items-center justify-between">
             <div>
               <h1 className="text-2xl font-bold text-gray-900">
-                Hi, {session?.user?.email?.split('@')[0] || 'Guest'}!
+                Hi, {profile?.name || session?.user?.email?.split('@')[0] || 'Guest'}!
               </h1>
               <div className="flex items-center gap-2 mt-1">
                 <MapPin className="w-4 h-4 text-pink-500" />
@@ -51,13 +51,24 @@ export function ClientHome({ onSelectService, onViewAllServices, onViewSchedule,
               </div>
             </div>
             <div className="flex items-center gap-3">
-              <SettingsDropdown onLogout={onLogout} role="client" />
+              <SettingsDropdown 
+                onLogout={onLogout} 
+                onEditProfile={() => {
+                  // Navigate to profile screen where edit is available
+                  onViewProfile();
+                }}
+                role="client" 
+              />
               <div className="h-8 w-px bg-gray-200"></div>
               <AvatarDropdown 
                 profile={profile} 
                 onLogout={onLogout} 
                 role="client"
                 onViewProfile={onViewProfile}
+                onEditProfile={() => {
+                  // Navigate to profile screen where edit is available
+                  onViewProfile();
+                }}
               />
             </div>
           </div>
@@ -291,7 +302,16 @@ export function ClientHome({ onSelectService, onViewAllServices, onViewSchedule,
                 >
                   <div className="h-48 bg-gradient-to-br from-pink-400 to-purple-500 relative overflow-hidden">
                     {service.image_url ? (
-                      <img src={service.image_url} alt={service.name} className="w-full h-full object-cover" />
+                      <img 
+                        src={service.image_url} 
+                        alt={service.name} 
+                        className="w-full h-full object-cover"
+                        onError={(e) => {
+                          // Hide image on error, fallback to placeholder
+                          const target = e.target as HTMLImageElement;
+                          target.style.display = 'none';
+                        }}
+                      />
                     ) : (
                       <div className="w-full h-full flex items-center justify-center">
                         <Scissors className="w-20 h-20 text-white opacity-50" />

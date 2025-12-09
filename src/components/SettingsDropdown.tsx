@@ -3,10 +3,11 @@ import { Settings, User, Bell, Shield, Palette, HelpCircle, LogOut } from 'lucid
 
 interface SettingsDropdownProps {
   onLogout?: () => void;
+  onEditProfile?: () => void;
   role?: 'admin' | 'manager' | 'staff' | 'client';
 }
 
-export function SettingsDropdown({ onLogout, role = 'admin' }: SettingsDropdownProps) {
+export function SettingsDropdown({ onLogout, onEditProfile, role = 'admin' }: SettingsDropdownProps) {
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
@@ -27,7 +28,11 @@ export function SettingsDropdown({ onLogout, role = 'admin' }: SettingsDropdownP
   }, [isOpen]);
 
   const handleProfileSettings = () => {
-    alert('Profile Settings: This feature allows you to update your profile information, change your password, and manage your account preferences.');
+    if (onEditProfile) {
+      onEditProfile();
+    } else {
+      alert('Profile Settings: This feature allows you to update your profile information, change your password, and manage your account preferences.');
+    }
   };
 
   const handleNotificationPreferences = () => {

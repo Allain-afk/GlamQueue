@@ -5,10 +5,11 @@ import type { AppointmentWithDetails } from '../api/admin';
 
 interface NotificationDropdownProps {
   role?: 'admin' | 'manager' | 'staff' | 'client';
+  onNotificationClick?: (appointmentId: number) => void;
 }
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-export function NotificationDropdown({ role: _role = 'admin' }: NotificationDropdownProps) {
+export function NotificationDropdown({ role: _role = 'admin', onNotificationClick }: NotificationDropdownProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [notifications, setNotifications] = useState<AppointmentWithDetails[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
@@ -180,6 +181,12 @@ export function NotificationDropdown({ role: _role = 'admin' }: NotificationDrop
                 {notifications.map((notification) => (
                   <div
                     key={notification.id}
+                    onClick={() => {
+                      if (onNotificationClick) {
+                        onNotificationClick(notification.id);
+                      }
+                      setIsOpen(false);
+                    }}
                     className="px-4 py-3 hover:bg-gray-50 transition-colors cursor-pointer"
                   >
                     <div className="flex items-start gap-3">
