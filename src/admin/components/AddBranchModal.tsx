@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { X, MapPin, Loader } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
+import { useAuth } from '../../auth/useAuth';
 
 interface Branch {
   id: string;
@@ -21,6 +22,7 @@ interface AddBranchModalProps {
 }
 
 export function AddBranchModal({ isOpen, onClose, onBranchSaved, editingBranch }: AddBranchModalProps) {
+  const { session } = useAuth();
   const [formData, setFormData] = useState({
     name: '',
     address: '',
@@ -65,6 +67,10 @@ export function AddBranchModal({ isOpen, onClose, onBranchSaved, editingBranch }
       setLoading(true);
       setError(null);
 
+      if (!session?.user?.id) {
+        throw new Error('You must be logged in to create a branch');
+      }
+
       const branchData = {
         name: formData.name,
         address: formData.address,
@@ -73,6 +79,7 @@ export function AddBranchModal({ isOpen, onClose, onBranchSaved, editingBranch }
         is_open: formData.is_open,
         rating: 0,
         review_count: 0,
+        owner_id: session.user.id, // Set owner_id to current user
       };
 
       if (editingBranch) {

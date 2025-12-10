@@ -7,6 +7,30 @@ import { SettingsDropdown } from '../../components/SettingsDropdown';
 import { AvatarDropdown } from '../../components/AvatarDropdown';
 import type { Service } from '../types';
 
+// Component for service image thumbnail with fallback
+function ServiceImageThumbnail({ imageUrl, serviceName }: { imageUrl?: string; serviceName: string }) {
+  const [imageError, setImageError] = useState(false);
+
+  if (!imageUrl || imageError) {
+    return (
+      <div className="w-12 h-12 bg-gradient-to-r from-pink-400 to-purple-500 rounded-lg flex items-center justify-center flex-shrink-0 border border-pink-100">
+        <Scissors className="w-5 h-5 text-white" />
+      </div>
+    );
+  }
+
+  return (
+    <div className="w-12 h-12 rounded-lg overflow-hidden flex-shrink-0 border border-pink-100">
+      <img 
+        src={imageUrl} 
+        alt={serviceName} 
+        className="w-full h-full object-cover"
+        onError={() => setImageError(true)}
+      />
+    </div>
+  );
+}
+
 interface ClientHomeProps {
   onSelectService: (service: Service) => void;
   onViewAllServices: () => void;
@@ -174,9 +198,10 @@ export function ClientHome({ onSelectService, onViewAllServices, onViewSchedule,
                         >
                           <td className="py-4 px-6">
                             <div className="flex items-center gap-3">
-                              <div className="w-10 h-10 bg-gradient-to-r from-pink-400 to-purple-500 rounded-lg flex items-center justify-center flex-shrink-0">
-                                <Scissors className="w-5 h-5 text-white" />
-                              </div>
+                              <ServiceImageThumbnail 
+                                imageUrl={booking.service?.image_url} 
+                                serviceName={booking.service?.name || 'Service'}
+                              />
                               <div>
                                 <p className="font-medium text-gray-900">{booking.service?.name || 'Service'}</p>
                                 <p className="text-sm text-gray-500">{booking.service?.duration || 0} min</p>
@@ -238,9 +263,10 @@ export function ClientHome({ onSelectService, onViewAllServices, onViewSchedule,
             <div className="bg-white rounded-2xl shadow-sm border border-pink-100 p-4">
               {upcomingBookings.slice(0, 2).map((booking) => (
                 <div key={booking.id} className="flex items-center gap-4 p-4 bg-gradient-to-r from-pink-50 to-purple-50 rounded-xl mb-3 last:mb-0">
-                  <div className="w-16 h-16 bg-gradient-to-r from-pink-500 to-pink-600 rounded-xl flex items-center justify-center">
-                    <Calendar className="w-8 h-8 text-white" />
-                  </div>
+                  <ServiceImageThumbnail 
+                    imageUrl={booking.service?.image_url} 
+                    serviceName={booking.service?.name || 'Service'}
+                  />
                   <div className="flex-1">
                     <h3 className="font-semibold text-gray-900">{booking.service?.name}</h3>
                     <p className="text-sm text-gray-600">{booking.shop?.name}</p>

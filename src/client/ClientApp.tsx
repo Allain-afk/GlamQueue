@@ -112,48 +112,6 @@ export function ClientApp({ onLogout, onRequireLogin }: ClientAppProps) {
     setCurrentView('schedule');
   };
 
-  const renderView = () => {
-    switch (currentView) {
-      case 'explore':
-        return (
-          <ServicesExplore
-            onSelectService={handleSelectService}
-            onBack={handleBackToHome}
-          />
-        );
-      case 'booking':
-        return selectedService ? (
-          <BookingScreen
-            service={selectedService}
-            onBack={() => setCurrentView('explore')}
-            onBookingComplete={handleBookingComplete}
-          />
-        ) : (
-          <ClientHome
-            onSelectService={handleSelectService}
-            onViewAllServices={() => setCurrentView('explore')}
-            onViewSchedule={() => setCurrentView('schedule')}
-            onViewProfile={() => setCurrentView('profile')}
-            onLogout={onLogout}
-          />
-        );
-      case 'schedule':
-        return <MySchedule onBack={handleBackToHome} />;
-      case 'profile':
-        return <Profile onBack={handleBackToHome} onLogout={onLogout} />;
-      default:
-        return (
-          <ClientHome
-            onSelectService={handleSelectService}
-            onViewAllServices={() => setCurrentView('explore')}
-            onViewSchedule={() => setCurrentView('schedule')}
-            onViewProfile={() => setCurrentView('profile')}
-            onLogout={onLogout}
-          />
-        );
-    }
-  };
-
   // Handle mobile navigation
   const handleMobileNavigate = (item: MobileNavItem) => {
     switch (item) {
@@ -180,27 +138,128 @@ export function ClientApp({ onLogout, onRequireLogin }: ClientAppProps) {
 
   return (
     <ClientProvider>
-      <div className="min-h-screen mobile-layout">
-        {renderView()}
-        
-        {/* Mobile Bottom Navigation - only visible on mobile */}
-        <MobileBottomNav 
-          activeItem={viewToNavItem[currentView]} 
-          onNavigate={handleMobileNavigate} 
-        />
-        
-        {showSuccessModal && (
-          <BookingSuccessModal
-            bookingId={bookingId}
-            onClose={handleCloseSuccessModal}
-            onViewSchedule={() => {
-              setShowSuccessModal(false);
-              setCurrentView('schedule');
-            }}
-          />
-        )}
-      </div>
+      <ClientAppContent
+        currentView={currentView}
+        selectedService={selectedService}
+        showSuccessModal={showSuccessModal}
+        bookingId={bookingId}
+        onSelectService={handleSelectService}
+        onBackToHome={handleBackToHome}
+        onViewSchedule={() => setCurrentView('schedule')}
+        onViewProfile={() => setCurrentView('profile')}
+        onViewAllServices={() => setCurrentView('explore')}
+        onBookingComplete={handleBookingComplete}
+        onCloseSuccessModal={handleCloseSuccessModal}
+        onLogout={onLogout}
+        onMobileNavigate={handleMobileNavigate}
+        viewToNavItem={viewToNavItem}
+        onSetCurrentView={setCurrentView}
+        onSetShowSuccessModal={setShowSuccessModal}
+      />
     </ClientProvider>
+  );
+}
+
+// Separate component that uses the context - ensures it's within ClientProvider
+function ClientAppContent({
+  currentView,
+  selectedService,
+  showSuccessModal,
+  bookingId,
+  onSelectService,
+  onBackToHome,
+  onViewSchedule,
+  onViewProfile,
+  onViewAllServices,
+  onBookingComplete,
+  onCloseSuccessModal,
+  onLogout,
+  onMobileNavigate,
+  viewToNavItem,
+  onSetCurrentView,
+  onSetShowSuccessModal,
+}: {
+  currentView: ClientView;
+  selectedService: Service | null;
+  showSuccessModal: boolean;
+  bookingId: string | null;
+  onSelectService: (service: Service) => void;
+  onBackToHome: () => void;
+  onViewSchedule: () => void;
+  onViewProfile: () => void;
+  onViewAllServices: () => void;
+  onBookingComplete: (id: string) => void;
+  onCloseSuccessModal: () => void;
+  onLogout: () => void;
+  onMobileNavigate: (item: MobileNavItem) => void;
+  viewToNavItem: Record<ClientView, MobileNavItem>;
+  onSetCurrentView: (view: ClientView) => void;
+  onSetShowSuccessModal: (show: boolean) => void;
+}) {
+  // Render view component based on current view
+  const renderView = () => {
+    switch (currentView) {
+      case 'explore':
+        return (
+          <ServicesExplore
+            onSelectService={onSelectService}
+            onBack={onBackToHome}
+          />
+        );
+      case 'booking':
+        return selectedService ? (
+          <BookingScreen
+            service={selectedService}
+            onBack={() => onSetCurrentView('explore')}
+            onBookingComplete={onBookingComplete}
+          />
+        ) : (
+          <ClientHome
+            onSelectService={onSelectService}
+            onViewAllServices={onViewAllServices}
+            onViewSchedule={onViewSchedule}
+            onViewProfile={onViewProfile}
+            onLogout={onLogout}
+          />
+        );
+      case 'schedule':
+        return <MySchedule onBack={onBackToHome} />;
+      case 'profile':
+        return <Profile onBack={onBackToHome} onLogout={onLogout} />;
+      default:
+        return (
+          <ClientHome
+            onSelectService={onSelectService}
+            onViewAllServices={onViewAllServices}
+            onViewSchedule={onViewSchedule}
+            onViewProfile={onViewProfile}
+            onLogout={onLogout}
+          />
+        );
+    }
+  };
+
+  return (
+    <div className="min-h-screen mobile-layout">
+      {renderView()}
+      
+      {/* Mobile Bottom Navigation - only visible on mobile */}
+      <MobileBottomNav 
+        activeItem={viewToNavItem[currentView]} 
+        onNavigate={onMobileNavigate} 
+      />
+      
+      {showSuccessModal && (
+        <BookingSuccessModal
+          bookingId={bookingId}
+          onClose={onCloseSuccessModal}
+          onViewSchedule={() => {
+            onSetShowSuccessModal(false);
+            onSetCurrentView('schedule');
+          }}
+        />
+      )}
+    </div>
   );
 }
 

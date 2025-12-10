@@ -1,4 +1,5 @@
 import { supabase } from '../../lib/supabase';
+import { getServiceImageUrl } from '../../utils/imageUtils';
 import type { Service, Shop } from '../types';
 
 // Database response types
@@ -176,7 +177,7 @@ export async function getServices(): Promise<Service[]> {
       shop_id: service.shop_id,
       shop_name: service.shop?.name || '',
       shop_address: service.shop?.address || '',
-      image_url: service.image_url,
+      image_url: getServiceImageUrl(service.image_url, service.name),
       rating: service.rating ? Number(service.rating) : undefined,
       created_at: service.created_at,
     })) as Service[];
@@ -234,7 +235,7 @@ export async function getServiceById(id: string): Promise<Service | null> {
       shop_id: data.shop_id,
       shop_name: data.shop?.name || '',
       shop_address: data.shop?.address || '',
-      image_url: data.image_url,
+      image_url: getServiceImageUrl(data.image_url, data.name),
       rating: data.rating ? Number(data.rating) : undefined,
       created_at: data.created_at,
     } as Service;

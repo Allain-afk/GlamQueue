@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
-import { X, Scissors, Loader } from 'lucide-react';
+import { X, Scissors, Loader, Upload } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { getShops } from '../../client/api/services';
+import { useAuth } from '../../auth/useAuth';
 import type { Shop } from '../../client/types';
 
 interface Service {
@@ -12,6 +13,7 @@ interface Service {
   duration: number;
   category: string;
   shop_id: string;
+  image_url?: string | null;
 }
 
 interface AddServiceModalProps {
@@ -22,6 +24,7 @@ interface AddServiceModalProps {
 }
 
 export function AddServiceModal({ isOpen, onClose, onServiceSaved, editingService }: AddServiceModalProps) {
+  const { session } = useAuth();
   const [shops, setShops] = useState<Shop[]>([]);
   const [formData, setFormData] = useState({
     name: '',
@@ -31,6 +34,9 @@ export function AddServiceModal({ isOpen, onClose, onServiceSaved, editingServic
     category: '',
     shop_id: '',
   });
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [uploadingImage, setUploadingImage] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -46,6 +52,12 @@ export function AddServiceModal({ isOpen, onClose, onServiceSaved, editingServic
           category: editingService.category,
           shop_id: editingService.shop_id,
         });
+        // Load existing image if available
+        if ('image_url' in editingService && editingService.image_url) {
+          setImagePreview(editingService.image_url);
+        } else {
+          setImagePreview(null);
+        }
       } else {
         setFormData({
           name: '',
@@ -55,6 +67,8 @@ export function AddServiceModal({ isOpen, onClose, onServiceSaved, editingServic
           category: '',
           shop_id: '',
         });
+        setImageFile(null);
+        setImagePreview(null);
       }
     }
   }, [isOpen, editingService]);
@@ -71,6 +85,83 @@ export function AddServiceModal({ isOpen, onClose, onServiceSaved, editingServic
     }
   };
 
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      // Validate file type
+      if (!file.type.startsWith('image/')) {
+        setError('Please select an image file');
+        return;
+      }
+      
+      // Validate file size (max 5MB)
+      if (file.size > 5 * 1024 * 1024) {
+        setError('Image size must be less than 5MB');
+        return;
+      }
+
+      setImageFile(file);
+      setError(null);
+      
+      // Create preview
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setImagePreview(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const uploadServiceImage = async (): Promise<string | null> => {
+    if (!imageFile || !session?.user?.id) {
+      return null;
+    }
+
+    try {
+      setUploadingImage(true);
+      
+      // Get file extension
+      const fileExt = imageFile.name.split('.').pop();
+      const fileName = `service-${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
+      const filePath = `services/${fileName}`;
+
+      // Upload file to Supabase Storage
+      const { error: uploadError } = await supabase.storage
+        .from('services')
+        .upload(filePath, imageFile, {
+          cacheControl: '3600',
+          upsert: false
+        });
+
+      if (uploadError) {
+        console.error('Upload error:', uploadError);
+        
+        // Provide more specific error messages
+        if (uploadError.message.includes('row-level security') || uploadError.message.includes('RLS')) {
+          throw new Error('Storage permissions not configured. Please contact administrator to set up storage policies.');
+        } else if (uploadError.message.includes('Bucket not found') || uploadError.message.includes('404')) {
+          throw new Error('Storage bucket not found. Please create "services" bucket in Supabase Storage.');
+        } else if (uploadError.message.includes('400') || uploadError.message.includes('Invalid')) {
+          throw new Error('Invalid file or storage configuration. Please check file format and storage settings.');
+        }
+        
+        throw new Error(`Failed to upload image: ${uploadError.message}`);
+      }
+
+      // Get public URL
+      const { data: { publicUrl } } = supabase.storage
+        .from('services')
+        .getPublicUrl(filePath);
+
+      return publicUrl;
+    } catch (err) {
+      console.error('Error uploading image:', err);
+      throw err;
+    } finally {
+      setUploadingImage(false);
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -83,6 +174,15 @@ export function AddServiceModal({ isOpen, onClose, onServiceSaved, editingServic
       setLoading(true);
       setError(null);
 
+      // Upload image if a new one was selected
+      let imageUrl = imagePreview && !imageFile ? imagePreview : null; // Keep existing URL if no new file
+      if (imageFile) {
+        imageUrl = await uploadServiceImage();
+        if (!imageUrl) {
+          throw new Error('Failed to upload service image');
+        }
+      }
+
       const serviceData = {
         name: formData.name,
         description: formData.description || '',
@@ -91,6 +191,7 @@ export function AddServiceModal({ isOpen, onClose, onServiceSaved, editingServic
         category: formData.category,
         shop_id: formData.shop_id,
         is_active: true,
+        image_url: imageUrl,
       };
 
       if (editingService) {
@@ -188,6 +289,58 @@ export function AddServiceModal({ isOpen, onClose, onServiceSaved, editingServic
             />
           </div>
 
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Service Image
+            </label>
+            <div className="space-y-2">
+              {imagePreview && (
+                <div className="relative w-full h-48 rounded-lg overflow-hidden border border-gray-300">
+                  <img 
+                    src={imagePreview} 
+                    alt="Service preview" 
+                    className="w-full h-full object-cover"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setImageFile(null);
+                      setImagePreview(null);
+                    }}
+                    className="absolute top-2 right-2 p-2 bg-red-500 text-white rounded-full hover:bg-red-600 transition-colors"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
+              )}
+              <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100 transition-colors">
+                <div className="flex flex-col items-center justify-center pt-5 pb-6">
+                  {uploadingImage ? (
+                    <>
+                      <Loader className="w-8 h-8 text-pink-500 animate-spin mb-2" />
+                      <p className="text-sm text-gray-500">Uploading...</p>
+                    </>
+                  ) : (
+                    <>
+                      <Upload className="w-8 h-8 text-gray-400 mb-2" />
+                      <p className="text-sm text-gray-500">
+                        <span className="font-semibold text-pink-600">Click to upload</span> or drag and drop
+                      </p>
+                      <p className="text-xs text-gray-500 mt-1">PNG, JPG, WEBP up to 5MB</p>
+                    </>
+                  )}
+                </div>
+                <input
+                  type="file"
+                  className="hidden"
+                  accept="image/png,image/jpeg,image/jpg,image/webp"
+                  onChange={handleImageChange}
+                  disabled={uploadingImage}
+                />
+              </label>
+            </div>
+          </div>
+
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -268,13 +421,13 @@ export function AddServiceModal({ isOpen, onClose, onServiceSaved, editingServic
             </button>
             <button
               type="submit"
-              disabled={loading}
+              disabled={loading || uploadingImage}
               className="flex-1 px-4 py-2 bg-pink-500 hover:bg-pink-600 text-white rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2"
             >
-              {loading ? (
+              {loading || uploadingImage ? (
                 <>
                   <Loader className="w-5 h-5 animate-spin" />
-                  <span>Saving...</span>
+                  <span>{uploadingImage ? 'Uploading...' : 'Saving...'}</span>
                 </>
               ) : (
                 <>
