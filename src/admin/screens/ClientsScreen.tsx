@@ -3,6 +3,7 @@ import { Users, Search, Mail, Phone, TrendingUp, Calendar, DollarSign, Award } f
 import { getAllClients, type Client } from '../../api/admin';
 import { ClientHistoryModal } from '../components/ClientHistoryModal';
 import { BookNowModal } from '../components/BookNowModal';
+import { AddClientModal } from '../components/AddClientModal';
 
 export function ClientsScreen() {
   const [clients, setClients] = useState<Client[]>([]);
@@ -12,6 +13,7 @@ export function ClientsScreen() {
   const [selectedClient, setSelectedClient] = useState<Client | null>(null);
   const [showHistoryModal, setShowHistoryModal] = useState(false);
   const [showBookModal, setShowBookModal] = useState(false);
+  const [showAddClientModal, setShowAddClientModal] = useState(false);
 
   useEffect(() => {
     loadClients();
@@ -88,7 +90,10 @@ export function ClientsScreen() {
           <h1 className="text-2xl font-bold text-gray-900">Clients</h1>
           <p className="text-sm text-gray-500 mt-1">Manage your client relationships and history</p>
         </div>
-        <button className="px-4 py-2 bg-pink-500 hover:bg-pink-600 text-white rounded-lg font-medium transition-colors flex items-center space-x-2">
+        <button 
+          onClick={() => setShowAddClientModal(true)}
+          className="px-4 py-2 bg-pink-500 hover:bg-pink-600 text-white rounded-lg font-medium transition-colors flex items-center space-x-2"
+        >
           <Users className="w-4 h-4" />
           <span>Add Client</span>
         </button>
@@ -183,7 +188,7 @@ export function ClientsScreen() {
                     {client.full_name?.charAt(0).toUpperCase() || 'C'}
                   </div>
                   <div>
-                    <h3 className="font-semibold text-gray-900">{client.full_name || 'Unknown'}</h3>
+                    <h3 className="font-semibold text-gray-900">{client.full_name || client.email || 'Unknown'}</h3>
                     <p className="text-xs text-gray-500">ID: {client.id.slice(0, 8)}</p>
                   </div>
                 </div>
@@ -312,6 +317,15 @@ export function ClientsScreen() {
           />
         </>
       )}
+
+      {/* Add Client Modal */}
+      <AddClientModal
+        isOpen={showAddClientModal}
+        onClose={() => setShowAddClientModal(false)}
+        onClientAdded={() => {
+          loadClients();
+        }}
+      />
     </div>
   );
 }

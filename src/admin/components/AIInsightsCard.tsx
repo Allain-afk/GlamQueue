@@ -1,7 +1,8 @@
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { Sparkles, Lightbulb, TrendingUp } from 'lucide-react';
 import type { DashboardStats } from '../../api/admin';
 import type { AppointmentWithDetails } from '../../api/admin';
+import { AIInsightsModal } from './AIInsightsModal';
 
 interface AIInsightsCardProps {
   dashboardStats?: DashboardStats;
@@ -17,6 +18,7 @@ interface Insight {
 }
 
 export function AIInsightsCard({ dashboardStats, appointments = [] }: AIInsightsCardProps) {
+  const [showModal, setShowModal] = useState(false);
   // Generate hardcoded insights based on current metrics
   const insights = useMemo<Insight[]>(() => {
     const insightsList: Insight[] = [];
@@ -148,7 +150,10 @@ export function AIInsightsCard({ dashboardStats, appointments = [] }: AIInsights
           </div>
         </div>
         <div className="flex space-x-2">
-          <button className="px-4 py-2 bg-white/20 hover:bg-white/30 rounded-lg text-sm font-medium transition-colors">
+          <button 
+            onClick={() => setShowModal(true)}
+            className="px-4 py-2 bg-white/20 hover:bg-white/30 rounded-lg text-sm font-medium transition-colors"
+          >
             View All
           </button>
         </div>
@@ -192,6 +197,14 @@ export function AIInsightsCard({ dashboardStats, appointments = [] }: AIInsights
           ))}
         </div>
       )}
+
+      {/* AI Insights Modal */}
+      <AIInsightsModal
+        isOpen={showModal}
+        onClose={() => setShowModal(false)}
+        dashboardStats={dashboardStats}
+        appointments={appointments}
+      />
     </div>
   );
 }

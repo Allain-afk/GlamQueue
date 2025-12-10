@@ -371,22 +371,12 @@ export function ServicesExplore({ onSelectService, onBack }: ServicesExploreProp
                   {/* Service Image */}
                   <div className="h-56 bg-gradient-to-br from-pink-400 to-purple-500 relative overflow-hidden">
                     {service.image_url ? (
-                      <img 
-                        src={service.image_url} 
-                        alt={service.name} 
-                        className="w-full h-full object-cover"
-                        onError={(e) => {
-                          // Fallback to placeholder if image fails to load
-                          const target = e.target as HTMLImageElement;
-                          target.style.display = 'none';
-                          const placeholder = target.nextElementSibling as HTMLElement;
-                          if (placeholder) placeholder.style.display = 'flex';
-                        }}
-                      />
-                    ) : null}
-                    <div className={`w-full h-full flex items-center justify-center ${service.image_url ? 'hidden' : ''}`}>
-                      <Scissors className="w-24 h-24 text-white opacity-50" />
-                    </div>
+                      <img src={service.image_url} alt={service.name} className="w-full h-full object-cover" />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center">
+                        <Scissors className="w-24 h-24 text-white opacity-50" />
+                      </div>
+                    )}
                     
                     {/* Price Tag */}
                     <div className="absolute top-4 right-4 bg-white px-4 py-2 rounded-full shadow-lg">

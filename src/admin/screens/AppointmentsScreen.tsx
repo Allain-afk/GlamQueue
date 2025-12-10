@@ -3,12 +3,14 @@ import { Calendar, Clock, Search, Filter, Eye, Check, X, MoreHorizontal } from '
 import { getAllAppointments, type AppointmentWithDetails } from '../../api/admin';
 import { adminUpdateBookingStatus } from '../../api/bookings';
 import { supabase } from '../../lib/supabase';
+import { AdminBookingModal } from '../components/AdminBookingModal';
 
 export function AppointmentsScreen() {
   const [appointments, setAppointments] = useState<AppointmentWithDetails[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [showBookingModal, setShowBookingModal] = useState(false);
 
   useEffect(() => {
     loadAppointments();
@@ -118,7 +120,10 @@ export function AppointmentsScreen() {
           <h1 className="text-2xl font-bold text-gray-900">Appointments</h1>
           <p className="text-sm text-gray-500 mt-1">Manage and track all salon bookings</p>
         </div>
-        <button className="px-4 py-2 bg-pink-500 hover:bg-pink-600 text-white rounded-lg font-medium transition-colors flex items-center space-x-2">
+        <button 
+          onClick={() => setShowBookingModal(true)}
+          className="px-4 py-2 bg-pink-500 hover:bg-pink-600 text-white rounded-lg font-medium transition-colors flex items-center space-x-2"
+        >
           <Calendar className="w-4 h-4" />
           <span>New Booking</span>
         </button>
@@ -320,6 +325,15 @@ export function AppointmentsScreen() {
           </div>
         </div>
       )}
+
+      {/* Admin Booking Modal */}
+      <AdminBookingModal
+        isOpen={showBookingModal}
+        onClose={() => setShowBookingModal(false)}
+        onBookingComplete={() => {
+          loadAppointments();
+        }}
+      />
     </div>
   );
 }

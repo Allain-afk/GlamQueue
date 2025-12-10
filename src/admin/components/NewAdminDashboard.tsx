@@ -8,6 +8,8 @@ import { ClientsScreen } from '../screens/ClientsScreen';
 import { StaffScreen } from '../screens/StaffScreen';
 import { AnalyticsScreen } from '../screens/AnalyticsScreen';
 import { MarketingScreen } from '../screens/MarketingScreen';
+import { ServicesScreen } from '../screens/ServicesScreen';
+import { BranchesScreen } from '../screens/BranchesScreen';
 import { NotificationDropdown } from '../../components/NotificationDropdown';
 import { SettingsDropdown } from '../../components/SettingsDropdown';
 import { AvatarDropdown } from '../../components/AvatarDropdown';
@@ -18,7 +20,7 @@ interface NewAdminDashboardProps {
   onLogout: () => void;
 }
 
-type TabType = 'dashboard' | 'appointments' | 'clients' | 'staff' | 'analytics' | 'marketing';
+type TabType = 'dashboard' | 'appointments' | 'clients' | 'staff' | 'analytics' | 'marketing' | 'services' | 'branches';
 
 // Map TabType to AdminNavItem for mobile navigation
 const tabToNavItem: Record<TabType, AdminNavItem> = {
@@ -28,6 +30,8 @@ const tabToNavItem: Record<TabType, AdminNavItem> = {
   staff: 'more',
   analytics: 'analytics',
   marketing: 'more',
+  services: 'more',
+  branches: 'more',
 };
 
 export function NewAdminDashboard({ onLogout }: NewAdminDashboardProps) {
@@ -93,6 +97,8 @@ export function NewAdminDashboard({ onLogout }: NewAdminDashboardProps) {
     { id: 'staff' as TabType, label: 'Staff' },
     { id: 'analytics' as TabType, label: 'Analytics' },
     { id: 'marketing' as TabType, label: 'Marketing' },
+    { id: 'services' as TabType, label: 'Services' },
+    { id: 'branches' as TabType, label: 'Branches' },
   ];
 
   // Memoize the active screen BEFORE early returns (Para optimized ang dashboard every screen render, dli lag HAHAHAH magic!!!)
@@ -104,6 +110,8 @@ export function NewAdminDashboard({ onLogout }: NewAdminDashboardProps) {
       case 'staff': return <StaffScreen />;
       case 'analytics': return <AnalyticsScreen />;
       case 'marketing': return <MarketingScreen />;
+      case 'services': return <ServicesScreen />;
+      case 'branches': return <BranchesScreen />;
       default: return <DashboardScreen />;
     }
   }, [activeTab]);

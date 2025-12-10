@@ -1,4 +1,4 @@
-import { useEffect, useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import {
   TrendingUp,
   Calendar,
@@ -12,8 +12,10 @@ import {
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { useAdminData } from '../context/AdminDataContext';
 import { AIInsightsCard } from '../components/AIInsightsCard';
+import { WalkInBookingModal } from '../components/WalkInBookingModal';
 
 export function DashboardScreen() {
+  const [showWalkInModal, setShowWalkInModal] = useState(false);
   const {
     dashboardStats,
     todayAppointments,
@@ -203,7 +205,10 @@ export function DashboardScreen() {
           <div className="p-6 border-b border-gray-100">
             <div className="flex items-center justify-between">
               <h3 className="text-lg font-semibold text-gray-900">Today's Appointments</h3>
-              <button className="px-4 py-2 bg-pink-500 hover:bg-pink-600 text-white rounded-lg text-sm font-medium transition-colors">
+              <button 
+                onClick={() => setShowWalkInModal(true)}
+                className="px-4 py-2 bg-pink-500 hover:bg-pink-600 text-white rounded-lg text-sm font-medium transition-colors"
+              >
                 New Booking
               </button>
             </div>
@@ -409,6 +414,16 @@ export function DashboardScreen() {
           )}
         </div>
       </div>
+
+      {/* Walk-In Booking Modal */}
+      <WalkInBookingModal
+        isOpen={showWalkInModal}
+        onClose={() => setShowWalkInModal(false)}
+        onBookingComplete={() => {
+          fetchTodayAppointments();
+          fetchDashboardStats();
+        }}
+      />
     </div>
   );
 }

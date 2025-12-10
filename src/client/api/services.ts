@@ -1,6 +1,37 @@
 import { supabase } from '../../lib/supabase';
-import { getServiceImage } from '../../utils/serviceImages';
 import type { Service, Shop } from '../types';
+
+// Database response types
+interface DatabaseService {
+  id: string;
+  name: string;
+  description: string | null;
+  price: number | string;
+  duration: number;
+  category: string;
+  shop_id: string;
+  image_url: string | null;
+  rating: number | string | null;
+  created_at: string | null;
+  shop?: {
+    id: string;
+    name: string;
+    address: string;
+  } | null;
+}
+
+interface DatabaseShop {
+  id: string;
+  name: string;
+  address: string;
+  rating: number | string | null;
+  review_count: number | null;
+  description: string | null;
+  is_open: boolean | null;
+  phone_number: string | null;
+  image_url: string | null;
+  created_at: string | null;
+}
 
 // Mock data for development (remove when database is ready)
 const mockServices: Service[] = [
@@ -15,7 +46,7 @@ const mockServices: Service[] = [
     shop_name: 'Glam Studio Manila',
     shop_address: 'Makati City, Metro Manila',
     rating: 4.8,
-    image_url: getServiceImage('Premium Haircut'),
+    image_url: 'https://images.unsplash.com/photo-1562322140-8baeececf3df?w=800&h=600&fit=crop',
   },
   {
     id: '2',
@@ -28,7 +59,7 @@ const mockServices: Service[] = [
     shop_name: 'Glam Studio Manila',
     shop_address: 'Makati City, Metro Manila',
     rating: 4.9,
-    image_url: getServiceImage('Hair Coloring'),
+    image_url: 'https://images.unsplash.com/photo-1560869713-9ca0e9e2c77e?w=800&h=600&fit=crop',
   },
   {
     id: '3',
@@ -41,7 +72,7 @@ const mockServices: Service[] = [
     shop_name: 'Beauty Lounge BGC',
     shop_address: 'Bonifacio Global City, Taguig',
     rating: 4.7,
-    image_url: getServiceImage('Keratin Treatment'),
+    image_url: 'https://images.unsplash.com/photo-1605497788044-5a32c7078486?w=800&h=600&fit=crop',
   },
   {
     id: '4',
@@ -54,7 +85,7 @@ const mockServices: Service[] = [
     shop_name: 'Beauty Lounge BGC',
     shop_address: 'Bonifacio Global City, Taguig',
     rating: 4.8,
-    image_url: getServiceImage('Hair Styling'),
+    image_url: 'https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?w=800&h=600&fit=crop',
   },
   {
     id: '5',
@@ -67,7 +98,7 @@ const mockServices: Service[] = [
     shop_name: 'Nail Spa Quezon City',
     shop_address: 'Quezon City, Metro Manila',
     rating: 4.6,
-    image_url: getServiceImage('Manicure & Pedicure'),
+    image_url: 'https://images.unsplash.com/photo-1604654894610-df63bc536371?w=800&h=600&fit=crop',
   },
   {
     id: '6',
@@ -80,7 +111,7 @@ const mockServices: Service[] = [
     shop_name: 'Nail Spa Quezon City',
     shop_address: 'Quezon City, Metro Manila',
     rating: 4.5,
-    image_url: getServiceImage('Facial Treatment'),
+    image_url: 'https://images.unsplash.com/photo-1616394584738-fc6e612e71b9?w=800&h=600&fit=crop',
   },
 ];
 
@@ -135,8 +166,7 @@ export async function getServices(): Promise<Service[]> {
     }
     
     // Map database response to client type
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    return (data || []).map((service: any) => ({
+    return (data || []).map((service: DatabaseService) => ({
       id: service.id,
       name: service.name,
       description: service.description || '',
@@ -146,8 +176,7 @@ export async function getServices(): Promise<Service[]> {
       shop_id: service.shop_id,
       shop_name: service.shop?.name || '',
       shop_address: service.shop?.address || '',
-      // Use image_url from database if available, otherwise get from local mapping
-      image_url: service.image_url || getServiceImage(service.name),
+      image_url: service.image_url,
       rating: service.rating ? Number(service.rating) : undefined,
       created_at: service.created_at,
     })) as Service[];
@@ -205,8 +234,7 @@ export async function getServiceById(id: string): Promise<Service | null> {
       shop_id: data.shop_id,
       shop_name: data.shop?.name || '',
       shop_address: data.shop?.address || '',
-      // Use image_url from database if available, otherwise get from local mapping
-      image_url: data.image_url || getServiceImage(data.name),
+      image_url: data.image_url,
       rating: data.rating ? Number(data.rating) : undefined,
       created_at: data.created_at,
     } as Service;
@@ -232,8 +260,7 @@ export async function getShops(): Promise<Shop[]> {
     }
     
     // Map database response to client type
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    return (data || []).map((shop: any) => ({
+    return (data || []).map((shop: DatabaseShop) => ({
       id: shop.id,
       name: shop.name,
       address: shop.address,

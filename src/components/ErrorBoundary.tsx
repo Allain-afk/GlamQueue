@@ -21,6 +21,21 @@ export class ErrorBoundary extends Component<Props, State> {
 
   public componentDidCatch(error: Error, errorInfo: ErrorInfo) {
     console.error('Uncaught error:', error, errorInfo);
+    
+    // Check if this is a chunk loading error
+    const isChunkError = error.message.includes('Failed to fetch dynamically imported module') ||
+                         error.message.includes('Loading chunk') ||
+                         error.message.includes('Loading CSS chunk');
+    
+    if (isChunkError) {
+      console.warn('Chunk loading error detected. This may be due to a deployment update.');
+      console.warn('Attempting to reload the page in 1 second...');
+      
+      // Auto-reload after a short delay for chunk errors
+      setTimeout(() => {
+        window.location.reload();
+      }, 1000);
+    }
   }
 
   public render() {

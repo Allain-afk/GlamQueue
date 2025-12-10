@@ -1,51 +1,18 @@
 /* Analytics AI Chatbot Styles */
 .analytics-chatbot-container {
-  position: relative;
-  margin-top: 1.5rem;
-}
-
-.analytics-chatbot-wrapper {
-  display: flex;
-  justify-content: center;
-  margin-top: 1rem;
-}
-
-.analytics-chatbot-button {
-  width: 50px;
-  height: 50px;
-  border-radius: 50%;
-  background: linear-gradient(135deg, #e91e8c, #f06292);
-  border: none;
-  color: white;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow: 0 4px 15px rgba(233, 30, 140, 0.4);
-  transition: all 0.3s ease;
-  z-index: 10;
-}
-
-.analytics-chatbot-button:hover {
-  transform: scale(1.1);
-  box-shadow: 0 6px 20px rgba(233, 30, 140, 0.5);
+  width: 100%;
+  margin-bottom: 1.5rem;
 }
 
 .analytics-chatbot-window {
-  position: absolute;
-  bottom: 70px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 380px;
-  max-width: calc(100vw - 2rem);
-  height: 550px;
+  width: 100%;
+  height: 500px;
   background: white;
-  border-radius: 20px;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+  border-radius: 16px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  z-index: 1000;
   border: 1px solid rgba(233, 30, 140, 0.1);
 }
 
@@ -237,26 +204,13 @@
 /* Responsive Design */
 @media (max-width: 768px) {
   .analytics-chatbot-window {
-    width: calc(100vw - 2rem);
-    left: 50%;
-    transform: translateX(-50%);
-    height: 500px;
-  }
-  
-  .analytics-chatbot-container {
-    position: relative;
-  }
-  
-  .service-card.analytics-card {
-    padding-bottom: 1rem;
+    height: 450px;
   }
 }
 
 @media (max-width: 480px) {
   .analytics-chatbot-window {
-    width: calc(100vw - 1rem);
-    height: 450px;
-    bottom: 60px;
+    height: 400px;
   }
   
   .analytics-chatbot-bubble {

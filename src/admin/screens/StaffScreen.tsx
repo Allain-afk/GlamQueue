@@ -3,6 +3,7 @@ import { Users, Star, Calendar, Clock, TrendingUp, Award, Plus } from 'lucide-re
 import { getStaffMembers, type StaffMember } from '../../api/admin';
 import { StaffScheduleModal } from '../components/StaffScheduleModal';
 import { StaffEditModal } from '../components/StaffEditModal';
+import { AddStaffModal } from '../components/AddStaffModal';
 
 export function StaffScreen() {
   const [staff, setStaff] = useState<StaffMember[]>([]);
@@ -10,6 +11,7 @@ export function StaffScreen() {
   const [selectedStaff, setSelectedStaff] = useState<StaffMember | null>(null);
   const [showScheduleModal, setShowScheduleModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
+  const [showAddStaffModal, setShowAddStaffModal] = useState(false);
 
   useEffect(() => {
     loadStaff();
@@ -69,7 +71,10 @@ export function StaffScreen() {
           <h1 className="text-2xl font-bold text-gray-900">Staff Management</h1>
           <p className="text-sm text-gray-500 mt-1">Manage team members and their schedules</p>
         </div>
-        <button className="px-4 py-2 bg-pink-500 hover:bg-pink-600 text-white rounded-lg font-medium transition-colors flex items-center space-x-2">
+        <button 
+          onClick={() => setShowAddStaffModal(true)}
+          className="px-4 py-2 bg-pink-500 hover:bg-pink-600 text-white rounded-lg font-medium transition-colors flex items-center space-x-2"
+        >
           <Plus className="w-4 h-4" />
           <span>Add Staff</span>
         </button>
@@ -287,6 +292,15 @@ export function StaffScreen() {
           />
         </>
       )}
+
+      {/* Add Staff Modal */}
+      <AddStaffModal
+        isOpen={showAddStaffModal}
+        onClose={() => setShowAddStaffModal(false)}
+        onStaffAdded={() => {
+          loadStaff();
+        }}
+      />
     </div>
   );
 }

@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { Bot, X, Send, TrendingUp, Lightbulb, BarChart3 } from 'lucide-react';
+import { Bot, Send, TrendingUp, Lightbulb, BarChart3 } from 'lucide-react';
 import { generateBusinessInsights, isGeminiConfigured, type ChatMessage } from '../services/geminiService';
 
 interface Message {
@@ -10,7 +10,6 @@ interface Message {
 }
 
 export function AnalyticsAIChatbot() {
-  const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>([
     {
       id: '1',
@@ -127,18 +126,8 @@ Use emojis sparingly for visual appeal (📊, ⏰, 👥, 🚀, ✨, 💡).
 
   return (
     <div className="analytics-chatbot-container">
-      {/* Chat Button */}
-      <button 
-        onClick={() => setIsOpen(!isOpen)}
-        className="analytics-chatbot-button"
-        title="AI Business Insights"
-      >
-        {isOpen ? <X size={20} /> : <Bot size={20} />}
-      </button>
-
-      {/* Chat Window */}
-      {isOpen && (
-        <div className="analytics-chatbot-window">
+      {/* Chat Window - Always Visible */}
+      <div className="analytics-chatbot-window">
           {/* Header */}
           <div className="analytics-chatbot-header">
             <div className="analytics-chatbot-header-content">
@@ -280,7 +269,6 @@ Use emojis sparingly for visual appeal (📊, ⏰, 👥, 🚀, ✨, 💡).
             </button>
           </div>
         </div>
-      )}
     </div>
   );
 }

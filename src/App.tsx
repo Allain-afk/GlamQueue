@@ -13,10 +13,38 @@ import { createSubscriptionFromOnboarding, createPaymentRecord } from './api/sub
 import './index.css';
 
 // Lazy load heavy components for code splitting
-const NewAdminDashboard = lazy(() => import('./admin/components/NewAdminDashboard').then(module => ({ default: module.NewAdminDashboard })));
-const ManagerDashboard = lazy(() => import('./manager/components/ManagerDashboard').then(module => ({ default: module.ManagerDashboard })));
-const StaffDashboard = lazy(() => import('./staff/components/StaffDashboard').then(module => ({ default: module.StaffDashboard })));
-const ClientApp = lazy(() => import('./client/ClientApp').then(module => ({ default: module.ClientApp })));
+// Properly typed lazy loading that preserves component prop types
+type NewAdminDashboardProps = { onLogout: () => Promise<void> };
+const NewAdminDashboard = lazy(() => 
+  import('./admin/components/NewAdminDashboard').then(module => ({ 
+    default: module.NewAdminDashboard 
+  }))
+) as React.LazyExoticComponent<React.ComponentType<NewAdminDashboardProps>>;
+
+type ManagerDashboardProps = { onLogout: () => Promise<void> };
+const ManagerDashboard = lazy(() => 
+  import('./manager/components/ManagerDashboard').then(module => ({ 
+    default: module.ManagerDashboard 
+  }))
+) as React.LazyExoticComponent<React.ComponentType<ManagerDashboardProps>>;
+
+type StaffDashboardProps = { onLogout: () => Promise<void> };
+const StaffDashboard = lazy(() => 
+  import('./staff/components/StaffDashboard').then(module => ({ 
+    default: module.StaffDashboard 
+  }))
+) as React.LazyExoticComponent<React.ComponentType<StaffDashboardProps>>;
+
+type ClientAppProps = { 
+  onBackToLanding: () => void; 
+  onLogout: () => Promise<void>; 
+  onRequireLogin: () => void; 
+};
+const ClientApp = lazy(() => 
+  import('./client/ClientApp').then(module => ({ 
+    default: module.ClientApp 
+  }))
+) as React.LazyExoticComponent<React.ComponentType<ClientAppProps>>;
 
 type AppState = 'landing' | 'login' | 'otp-verification' | 'admin-dashboard' | 'manager-dashboard' | 'staff-dashboard' | 'client-app' | 'onboarding' | 'subscription-required';
 

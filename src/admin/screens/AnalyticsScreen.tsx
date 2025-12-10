@@ -20,6 +20,8 @@ import {
   ResponsiveContainer,
 } from 'recharts';
 import { getAnalyticsData, type AnalyticsData } from '../../api/admin';
+import { AnalyticsAIChatbot } from '../../components/AnalyticsAIChatbot';
+import '../../styles/components/analytics-chatbot.css';
 
 const COLORS = ['#ec4899', '#8b5cf6', '#3b82f6', '#10b981', '#f59e0b', '#ef4444'];
 
@@ -111,6 +113,12 @@ export function AnalyticsScreen() {
             This Year
           </button>
         </div>
+      </div>
+
+      {/* AI Chatbot Section */}
+      <div className="bg-white rounded-xl p-6 border border-gray-100 mb-6">
+        <h2 className="text-lg font-semibold text-gray-900 mb-4">AI Business Insights Assistant</h2>
+        <AnalyticsAIChatbot />
       </div>
 
       {/* Key Metrics */}

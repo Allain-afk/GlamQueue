@@ -1,6 +1,33 @@
 import { supabase } from '../../lib/supabase';
 import type { Booking, BookingStatus } from '../types';
 
+// Database response types
+interface DatabaseBooking {
+  id: string | number;
+  client_id: string;
+  service_id: string | number;
+  shop_id: string | number;
+  start_at: string;
+  end_at?: string | null;
+  status: BookingStatus;
+  notes?: string | null;
+  created_at?: string | null;
+  updated_at?: string | null;
+  service?: {
+    id: string | number;
+    name: string;
+    price: number | string;
+    duration: number;
+    [key: string]: unknown;
+  } | null;
+  shop?: {
+    id: string | number;
+    name: string;
+    address: string;
+    [key: string]: unknown;
+  } | null;
+}
+
 export async function createBooking(booking: {
   service_id: string;
   shop_id: string;
@@ -91,8 +118,7 @@ export async function getMyBookings(): Promise<Booking[]> {
   }
   
   // Map database response to client type
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  return (data || []).map((booking: any) => ({
+  return (data || []).map((booking: DatabaseBooking) => ({
     ...booking,
     id: String(booking.id),
     user_id: booking.client_id,
@@ -131,8 +157,7 @@ export async function getUpcomingBookings(): Promise<Booking[]> {
   }
   
   // Map database response to client type
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  return (data || []).map((booking: any) => ({
+  return (data || []).map((booking: DatabaseBooking) => ({
     ...booking,
     id: String(booking.id),
     user_id: booking.client_id,

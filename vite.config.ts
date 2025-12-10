@@ -9,6 +9,7 @@ export default defineConfig({
     VitePWA({
       registerType: 'autoUpdate',
       includeAssets: ['favicon.ico', 'vite.svg', 'images/*.png', 'icons/*.png', 'icons/*.svg'],
+      manifestFilename: 'manifest.json',
       manifest: {
         name: 'GlamQueue - Salon Management',
         short_name: 'GlamQueue',
@@ -185,6 +186,10 @@ export default defineConfig({
   build: {
     rollupOptions: {
       output: {
+        // Ensure consistent chunk naming
+        chunkFileNames: 'assets/[name]-[hash].js',
+        entryFileNames: 'assets/[name]-[hash].js',
+        assetFileNames: 'assets/[name]-[hash].[ext]',
         manualChunks(id) {
           // Split node_modules into vendor chunks
           if (id.includes('node_modules')) {
@@ -222,6 +227,8 @@ export default defineConfig({
       },
     },
     chunkSizeWarningLimit: 600, // Increase warning threshold slightly
+    // Ensure proper sourcemaps for debugging
+    sourcemap: false,
   },
   server: {
     port: 3000,

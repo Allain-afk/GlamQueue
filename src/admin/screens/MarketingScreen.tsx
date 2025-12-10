@@ -13,9 +13,11 @@ import {
   Heart,
   Award,
 } from 'lucide-react';
+import { NewCampaignModal } from '../components/NewCampaignModal';
 
 export function MarketingScreen() {
   const [activeTab, setActiveTab] = useState<'campaigns' | 'loyalty' | 'promotions'>('campaigns');
+  const [showNewCampaignModal, setShowNewCampaignModal] = useState(false);
 
   const campaigns = [
     {
@@ -116,7 +118,10 @@ export function MarketingScreen() {
           <h1 className="text-2xl font-bold text-gray-900">Marketing</h1>
           <p className="text-sm text-gray-500 mt-1">Manage campaigns, promotions, and loyalty programs</p>
         </div>
-        <button className="px-4 py-2 bg-pink-500 hover:bg-pink-600 text-white rounded-lg font-medium transition-colors flex items-center space-x-2">
+        <button 
+          onClick={() => setShowNewCampaignModal(true)}
+          className="px-4 py-2 bg-pink-500 hover:bg-pink-600 text-white rounded-lg font-medium transition-colors flex items-center space-x-2"
+        >
           <Zap className="w-4 h-4" />
           <span>New Campaign</span>
         </button>
@@ -448,6 +453,15 @@ export function MarketingScreen() {
           </div>
         </div>
       )}
+
+      {/* New Campaign Modal */}
+      <NewCampaignModal
+        isOpen={showNewCampaignModal}
+        onClose={() => setShowNewCampaignModal(false)}
+        onCampaignCreated={() => {
+          // Refresh campaigns if needed
+        }}
+      />
     </div>
   );
 }

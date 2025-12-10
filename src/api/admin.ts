@@ -645,8 +645,8 @@ export async function getAllClients(): Promise<Client[]> {
       return {
         id: profile.id,
         email: profile.email || '',
-        full_name: profile.email?.split('@')[0],
-        phone: undefined,
+        full_name: (profile as any).full_name || (profile as any).name || profile.email?.split('@')[0] || 'Unknown',
+        phone: (profile as any).phone || undefined,
         total_visits: stats?.visits || 0,
         total_spent: totalSpent,
         last_visit: stats?.lastVisit,
