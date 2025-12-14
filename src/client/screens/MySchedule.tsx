@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Calendar, Clock, MapPin, CheckCircle, XCircle } from 'lucide-react';
 import { useClient } from '../context/ClientContext';
 import { cancelBooking } from '../api/bookings';
+import { glamConfirm, glamError, glamSuccess } from '../../lib/glamAlerts';
 // import type { Booking } from '../types'; // Unused for now
 
 interface MyScheduleProps {
@@ -14,14 +15,20 @@ export function MySchedule({ onBack }: MyScheduleProps) {
   const [cancellingId, setCancellingId] = useState<string | null>(null);
 
   const handleCancelBooking = async (bookingId: string) => {
-    if (!confirm('Are you sure you want to cancel this booking?')) return;
+    const ok = await glamConfirm({
+      title: 'Cancel this booking?',
+      text: 'This action cannot be undone.',
+      confirmText: 'Yes, cancel',
+    });
+    if (!ok) return;
 
     try {
       setCancellingId(bookingId);
       await cancelBooking(bookingId);
       await refreshBookings();
+      glamSuccess('Booking cancelled');
     } catch (error) {
-      alert('Failed to cancel booking');
+      glamError('Failed to cancel booking');
       console.error(error);
     } finally {
       setCancellingId(null);

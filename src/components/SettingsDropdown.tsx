@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { Settings, User, Bell, Shield, Palette, HelpCircle, LogOut } from 'lucide-react';
+import { glamInfoDialog, glamSuccess } from '../lib/glamAlerts';
 
 interface SettingsDropdownProps {
   onLogout?: () => void;
@@ -31,12 +32,18 @@ export function SettingsDropdown({ onLogout, onEditProfile, role = 'admin' }: Se
     if (onEditProfile) {
       onEditProfile();
     } else {
-      alert('Profile Settings: This feature allows you to update your profile information, change your password, and manage your account preferences.');
+      glamInfoDialog({
+        title: 'Profile Settings',
+        text: 'Update your profile information, change your password, and manage your account preferences.',
+      });
     }
   };
 
   const handleNotificationPreferences = () => {
-    alert('Notification Preferences: Configure how and when you receive notifications about appointments, bookings, and system updates.');
+    glamInfoDialog({
+      title: 'Notification Preferences',
+      text: 'Configure how and when you receive notifications about appointments, bookings, and system updates.',
+    });
   };
 
   const handleAppearance = () => {
@@ -44,15 +51,21 @@ export function SettingsDropdown({ onLogout, onEditProfile, role = 'admin' }: Se
     const newTheme = theme === 'light' ? 'dark' : 'light';
     localStorage.setItem('theme', newTheme);
     document.documentElement.classList.toggle('dark', newTheme === 'dark');
-    alert(`Appearance: Theme switched to ${newTheme} mode.`);
+    glamSuccess(`Theme switched to ${newTheme} mode`);
   };
 
   const handlePrivacySecurity = () => {
-    alert('Privacy & Security: Manage your privacy settings, view login history, enable two-factor authentication, and control data sharing preferences.');
+    glamInfoDialog({
+      title: 'Privacy & Security',
+      text: 'Manage your privacy settings, view login history, enable two-factor authentication, and control data sharing preferences.',
+    });
   };
 
   const handleHelpSupport = () => {
-    alert('Help & Support: Access documentation, contact support, view FAQs, or report issues. Email: support@glamqueue.com');
+    glamInfoDialog({
+      title: 'Help & Support',
+      text: 'Access documentation, contact support, view FAQs, or report issues. Email: support@glamqueue.com',
+    });
   };
 
   const settingsItems = [

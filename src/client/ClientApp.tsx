@@ -6,6 +6,7 @@ import { BookingScreen } from './screens/BookingScreen';
 import { MySchedule } from './screens/MySchedule';
 import { Profile } from './screens/Profile';
 import { BookingSuccessModal } from './components/BookingSuccessModal';
+import { PaymentMethodModal } from './components/PaymentMethodModal';
 import { useAuth } from '../auth/useAuth';
 import { getPendingBooking, clearPendingBooking } from '../utils/bookingStorage';
 import { mapBookingDataToIds, parseTimeToDateTime } from '../utils/bookingMapper';
@@ -36,6 +37,7 @@ export function ClientApp({ onLogout, onRequireLogin }: ClientAppProps) {
   const [selectedService, setSelectedService] = useState<Service | null>(null);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [bookingId, setBookingId] = useState<string | null>(null);
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
 
   // Redirect to login if not authenticated
   useEffect(() => {
@@ -78,9 +80,9 @@ export function ClientApp({ onLogout, onRequireLogin }: ClientAppProps) {
         
         console.log('Pending booking created successfully:', booking);
         
-        // Show success modal and clear pending booking
+        // Show payment method selection (then success modal) and clear pending booking
         setBookingId(booking.id);
-        setShowSuccessModal(true);
+        setShowPaymentModal(true);
         clearPendingBooking();
       } catch (error) {
         console.error('Error processing pending booking:', error);
@@ -103,6 +105,11 @@ export function ClientApp({ onLogout, onRequireLogin }: ClientAppProps) {
 
   const handleBookingComplete = (id: string) => {
     setBookingId(id);
+    setShowPaymentModal(true);
+  };
+
+  const handlePaymentDone = () => {
+    setShowPaymentModal(false);
     setShowSuccessModal(true);
   };
 
@@ -143,12 +150,14 @@ export function ClientApp({ onLogout, onRequireLogin }: ClientAppProps) {
         selectedService={selectedService}
         showSuccessModal={showSuccessModal}
         bookingId={bookingId}
+        showPaymentModal={showPaymentModal}
         onSelectService={handleSelectService}
         onBackToHome={handleBackToHome}
         onViewSchedule={() => setCurrentView('schedule')}
         onViewProfile={() => setCurrentView('profile')}
         onViewAllServices={() => setCurrentView('explore')}
         onBookingComplete={handleBookingComplete}
+        onPaymentDone={handlePaymentDone}
         onCloseSuccessModal={handleCloseSuccessModal}
         onLogout={onLogout}
         onMobileNavigate={handleMobileNavigate}
@@ -166,12 +175,14 @@ function ClientAppContent({
   selectedService,
   showSuccessModal,
   bookingId,
+  showPaymentModal,
   onSelectService,
   onBackToHome,
   onViewSchedule,
   onViewProfile,
   onViewAllServices,
   onBookingComplete,
+  onPaymentDone,
   onCloseSuccessModal,
   onLogout,
   onMobileNavigate,
@@ -183,12 +194,14 @@ function ClientAppContent({
   selectedService: Service | null;
   showSuccessModal: boolean;
   bookingId: string | null;
+  showPaymentModal: boolean;
   onSelectService: (service: Service) => void;
   onBackToHome: () => void;
   onViewSchedule: () => void;
   onViewProfile: () => void;
   onViewAllServices: () => void;
   onBookingComplete: (id: string) => void;
+  onPaymentDone: () => void;
   onCloseSuccessModal: () => void;
   onLogout: () => void;
   onMobileNavigate: (item: MobileNavItem) => void;
@@ -248,6 +261,15 @@ function ClientAppContent({
         activeItem={viewToNavItem[currentView]} 
         onNavigate={onMobileNavigate} 
       />
+
+      {showPaymentModal && bookingId && (
+        <PaymentMethodModal
+          bookingId={bookingId}
+          onDone={() => {
+            onPaymentDone();
+          }}
+        />
+      )}
       
       {showSuccessModal && (
         <BookingSuccessModal

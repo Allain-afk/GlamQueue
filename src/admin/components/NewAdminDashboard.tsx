@@ -40,9 +40,11 @@ export function NewAdminDashboard({ onLogout }: NewAdminDashboardProps) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showEditProfile, setShowEditProfile] = useState(false);
+  const [showMobileMoreMenu, setShowMobileMoreMenu] = useState(false);
 
   // Handle mobile navigation
   const handleMobileNavigate = (item: AdminNavItem) => {
+    setShowMobileMoreMenu(false);
     switch (item) {
       case 'dashboard':
         setActiveTab('dashboard');
@@ -57,7 +59,7 @@ export function NewAdminDashboard({ onLogout }: NewAdminDashboardProps) {
         setActiveTab('analytics');
         break;
       case 'more':
-        setActiveTab('staff');
+        setShowMobileMoreMenu(true);
         break;
     }
   };
@@ -228,9 +230,23 @@ export function NewAdminDashboard({ onLogout }: NewAdminDashboardProps) {
           </nav>
         </div>
 
-        {/* Mobile Header Title */}
+        {/* Mobile Tabs (so all screens are reachable on phones) */}
         <div className="mobile-only px-4 py-2 border-t border-gray-100">
-          <h2 className="text-lg font-semibold text-gray-900 capitalize">{activeTab}</h2>
+          <div className="flex gap-2 overflow-x-auto no-scrollbar">
+            {tabs.map((tab) => (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                className={`px-4 py-2 rounded-full text-sm font-semibold whitespace-nowrap transition-colors ${
+                  activeTab === tab.id
+                    ? 'bg-pink-600 text-white'
+                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                }`}
+              >
+                {tab.label}
+              </button>
+            ))}
+          </div>
         </div>
       </header>
 
@@ -256,6 +272,50 @@ export function NewAdminDashboard({ onLogout }: NewAdminDashboardProps) {
           activeItem={tabToNavItem[activeTab]} 
           onNavigate={handleMobileNavigate} 
         />
+
+        {/* Mobile More Menu (Admin) */}
+        {showMobileMoreMenu && (
+          <div className="mobile-only fixed inset-0 z-[1100]">
+            <button
+              type="button"
+              className="absolute inset-0 bg-black/40"
+              aria-label="Close"
+              onClick={() => setShowMobileMoreMenu(false)}
+            />
+            <div className="absolute left-0 right-0 bottom-[64px] px-4 pb-4">
+              <div className="bg-white rounded-2xl shadow-2xl border border-gray-200 overflow-hidden">
+                <div className="px-4 py-3 border-b border-gray-100">
+                  <p className="text-sm font-semibold text-gray-900">More</p>
+                  <p className="text-xs text-gray-500">Admin shortcuts</p>
+                </div>
+                <div className="p-2">
+                  {[
+                    { id: 'staff' as const, label: 'Staff' },
+                    { id: 'marketing' as const, label: 'Marketing' },
+                    { id: 'services' as const, label: 'Services' },
+                    { id: 'branches' as const, label: 'Branches' },
+                  ].map((item) => (
+                    <button
+                      key={item.id}
+                      type="button"
+                      onClick={() => {
+                        setActiveTab(item.id);
+                        setShowMobileMoreMenu(false);
+                      }}
+                      className={`w-full text-left px-4 py-3 rounded-xl text-sm font-semibold transition-colors ${
+                        activeTab === item.id
+                          ? 'bg-pink-50 text-pink-700'
+                          : 'text-gray-700 hover:bg-gray-50'
+                      }`}
+                    >
+                      {item.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Edit Profile Modal */}
         {showEditProfile && profile && (

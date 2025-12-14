@@ -15,6 +15,16 @@
   --mobile-transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
+/* Utility: hide scrollbars (mobile tab rows) */
+.no-scrollbar {
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE/Edge */
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none; /* Chrome/Safari */
+}
+
 /* ========================================
    A. MOBILE BOTTOM NAVIGATION
    Fixed bottom bar with safe area support

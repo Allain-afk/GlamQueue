@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Plus, Edit, Trash2, Search, Scissors } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { AddServiceModal } from '../components/AddServiceModal';
+import { glamConfirm, glamError, glamSuccess } from '../../lib/glamAlerts';
 
 interface Service {
   id: string;
@@ -52,7 +53,12 @@ export function ServicesScreen() {
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm('Are you sure you want to delete this service?')) return;
+    const ok = await glamConfirm({
+      title: 'Delete this service?',
+      text: 'This will disable the service and hide it from clients.',
+      confirmText: 'Yes, delete',
+    });
+    if (!ok) return;
 
     try {
       const { error } = await supabase
@@ -61,10 +67,11 @@ export function ServicesScreen() {
         .eq('id', id);
 
       if (error) throw error;
+      glamSuccess('Service deleted');
       loadServices();
     } catch (error) {
       console.error('Error deleting service:', error);
-      alert('Failed to delete service');
+      glamError('Failed to delete service');
     }
   };
 

@@ -4,12 +4,14 @@ import { getManagerAppointments } from '../../api/manager';
 import { adminUpdateBookingStatus } from '../../api/bookings';
 import { supabase } from '../../lib/supabase';
 import type { AppointmentWithDetails } from '../../api/admin';
+import { glamConfirm, glamError, glamSuccess } from '../../lib/glamAlerts';
 
 export function AppointmentsScreen() {
   const [appointments, setAppointments] = useState<AppointmentWithDetails[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [updatingIds, setUpdatingIds] = useState<Record<number, boolean>>({});
 
   useEffect(() => {
     loadAppointments();
@@ -44,13 +46,55 @@ export function AppointmentsScreen() {
 
   const handleStatusUpdate = async (id: number, status: AppointmentWithDetails['status']) => {
     try {
+      setUpdatingIds(prev => ({ ...prev, [id]: true }));
       await adminUpdateBookingStatus(id, status);
       setAppointments(prev =>
         prev.map(apt => apt.id === id ? { ...apt, status } : apt)
       );
+
+      if (status === 'confirmed') glamSuccess('Appointment confirmed');
+      else if (status === 'completed') glamSuccess('Appointment marked as completed');
+      else if (status === 'cancelled') glamSuccess('Appointment cancelled');
+      else glamSuccess('Appointment updated');
     } catch (error) {
       console.error('Error updating status:', error);
+      glamError(error instanceof Error ? error.message : 'Failed to update appointment status');
     }
+    finally {
+      setUpdatingIds(prev => {
+        const next = { ...prev };
+        delete next[id];
+        return next;
+      });
+    }
+  };
+
+  const requestStatusUpdate = async (id: number, status: AppointmentWithDetails['status']) => {
+    const apt = appointments.find(a => a.id === id);
+    const confirmText = status === 'confirmed'
+      ? 'Yes, confirm'
+      : status === 'completed'
+        ? 'Yes, mark complete'
+        : status === 'cancelled'
+          ? 'Yes, cancel'
+          : 'Confirm';
+
+    const title = status === 'confirmed'
+      ? 'Confirm this appointment?'
+      : status === 'completed'
+        ? 'Mark this appointment as completed?'
+        : status === 'cancelled'
+          ? 'Cancel this appointment?'
+          : 'Update this appointment?';
+
+    const text = apt
+      ? `${apt.client_name || 'Client'} • ${apt.service_name || 'Service'} • ${new Date(apt.start_at).toLocaleString()}`
+      : 'Please confirm you want to proceed.';
+
+    const ok = await glamConfirm({ title, text, confirmText });
+    if (!ok) return;
+
+    await handleStatusUpdate(id, status);
   };
 
   const filteredAppointments = appointments.filter(apt => {
@@ -113,6 +157,7 @@ export function AppointmentsScreen() {
         </div>
       </div>
 
+
       {/* Filters */}
       <div className="flex flex-col sm:flex-row gap-4">
         <div className="relative flex-1">
@@ -171,14 +216,16 @@ export function AppointmentsScreen() {
                   {apt.status === 'pending' && (
                     <>
                       <button
-                        onClick={() => handleStatusUpdate(apt.id, 'confirmed')}
+                        onClick={() => void requestStatusUpdate(apt.id, 'confirmed')}
+                        disabled={!!updatingIds[apt.id]}
                         className="p-2 bg-green-100 text-green-700 rounded-lg hover:bg-green-200 transition-colors"
                         title="Confirm"
                       >
                         <Check className="w-5 h-5" />
                       </button>
                       <button
-                        onClick={() => handleStatusUpdate(apt.id, 'cancelled')}
+                        onClick={() => void requestStatusUpdate(apt.id, 'cancelled')}
+                        disabled={!!updatingIds[apt.id]}
                         className="p-2 bg-red-100 text-red-700 rounded-lg hover:bg-red-200 transition-colors"
                         title="Cancel"
                       >
@@ -188,7 +235,8 @@ export function AppointmentsScreen() {
                   )}
                   {apt.status === 'confirmed' && (
                     <button
-                      onClick={() => handleStatusUpdate(apt.id, 'completed')}
+                      onClick={() => void requestStatusUpdate(apt.id, 'completed')}
+                      disabled={!!updatingIds[apt.id]}
                       className="px-4 py-2 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition-colors text-sm font-medium"
                     >
                       Mark as Done

@@ -7,6 +7,7 @@ import { savePendingBooking } from '../utils/bookingStorage';
 import { type PlanType } from './OnboardingPaymentScreen';
 import { getShops, getServices } from '../client/api/services';
 import type { Shop, Service } from '../client/types';
+import { glamSuccess, glamWarning } from '../lib/glamAlerts';
 import '../styles/components/redesigned-landing.css';
 import '../styles/components/pwa-install.css';
 
@@ -101,7 +102,7 @@ export function RedesignedLandingPage({ onGetStarted, onLogin, onStartOnboarding
   const handleCopyDownloadLink = () => {
     const apkDownloadUrl = 'https://github.com/Allain-afk/GlamQueue/releases/download/v1.1.0/app-release.apk';
     navigator.clipboard.writeText(apkDownloadUrl).then(() => {
-      alert('Download link copied to clipboard!');
+      glamSuccess('Download link copied to clipboard');
     }).catch(() => {
       // Fallback for older browsers
       const textArea = document.createElement('textarea');
@@ -110,7 +111,7 @@ export function RedesignedLandingPage({ onGetStarted, onLogin, onStartOnboarding
       textArea.select();
       document.execCommand('copy');
       document.body.removeChild(textArea);
-      alert('Download link copied to clipboard!');
+      glamSuccess('Download link copied to clipboard');
     });
   };
 
@@ -124,7 +125,7 @@ export function RedesignedLandingPage({ onGetStarted, onLogin, onStartOnboarding
     // Validate form
     if (!bookingData.name || !bookingData.email || !bookingData.phone || 
         !bookingData.salon || !bookingData.service || !selectedDate || !bookingData.time) {
-      alert('Please fill in all fields and select a date and time');
+      glamWarning('Please fill in all fields and select a date and time');
       return;
     }
     

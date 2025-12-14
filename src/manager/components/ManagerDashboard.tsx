@@ -205,9 +205,23 @@ export function ManagerDashboard({ onLogout }: ManagerDashboardProps) {
         </div>
       </div>
 
-      {/* Mobile Tab Title */}
+      {/* Mobile Tabs (so all screens are reachable on phones) */}
       <div className="mobile-only bg-white border-b border-gray-100 px-4 py-3">
-        <h2 className="text-lg font-semibold text-gray-900 capitalize">{activeTab}</h2>
+        <div className="flex gap-2 overflow-x-auto no-scrollbar">
+          {tabs.map((tab) => (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              className={`px-4 py-2 rounded-full text-sm font-semibold whitespace-nowrap transition-colors ${
+                activeTab === tab.id
+                  ? 'bg-pink-600 text-white'
+                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+              }`}
+            >
+              {tab.label}
+            </button>
+          ))}
+        </div>
       </div>
 
       {/* Content */}

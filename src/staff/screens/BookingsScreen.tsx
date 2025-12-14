@@ -3,6 +3,7 @@ import { Calendar, Clock, Check, X, Search } from 'lucide-react';
 import { getStaffTodayAppointments, getStaffAppointments, updateBookingStatus } from '../../api/staff';
 import { supabase } from '../../lib/supabase';
 import type { AppointmentWithDetails } from '../../api/admin';
+import { glamConfirm, glamError, glamSuccess } from '../../lib/glamAlerts';
 
 export function BookingsScreen() {
   const [appointments, setAppointments] = useState<AppointmentWithDetails[]>([]);
@@ -49,10 +50,48 @@ export function BookingsScreen() {
       setAppointments(prev =>
         prev.map(apt => apt.id === id ? { ...apt, status } : apt)
       );
+      glamSuccess(
+        status === 'confirmed'
+          ? 'Appointment confirmed'
+          : status === 'completed'
+            ? 'Appointment marked as done'
+            : status === 'cancelled'
+              ? 'Appointment rejected'
+              : 'Appointment updated'
+      );
     } catch (error) {
       console.error('Error updating status:', error);
-      alert('Failed to update appointment status');
+      glamError('Failed to update appointment status');
     }
+  };
+
+  const requestStatusUpdate = async (id: number, status: AppointmentWithDetails['status']) => {
+    const apt = appointments.find(a => a.id === id);
+
+    const confirmText = status === 'confirmed'
+      ? 'Yes, approve'
+      : status === 'completed'
+        ? 'Yes, mark done'
+        : status === 'cancelled'
+          ? 'Yes, reject'
+          : 'Confirm';
+
+    const title = status === 'confirmed'
+      ? 'Approve this appointment?'
+      : status === 'completed'
+        ? 'Mark this appointment as done?'
+        : status === 'cancelled'
+          ? 'Reject this appointment?'
+          : 'Update this appointment?';
+
+    const text = apt
+      ? `${apt.client_name || 'Client'} • ${apt.service_name || 'Service'} • ${new Date(apt.start_at).toLocaleString()}`
+      : 'Please confirm you want to proceed.';
+
+    const ok = await glamConfirm({ title, text, confirmText });
+    if (!ok) return;
+
+    await handleStatusUpdate(id, status);
   };
 
   const filteredAppointments = appointments.filter(apt =>
@@ -215,14 +254,14 @@ export function BookingsScreen() {
                   {apt.status === 'pending' && (
                     <>
                       <button
-                        onClick={() => handleStatusUpdate(apt.id, 'confirmed')}
+                        onClick={() => requestStatusUpdate(apt.id, 'confirmed')}
                         className="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors flex items-center gap-2"
                       >
                         <Check className="w-4 h-4" />
                         Approve
                       </button>
                       <button
-                        onClick={() => handleStatusUpdate(apt.id, 'cancelled')}
+                        onClick={() => requestStatusUpdate(apt.id, 'cancelled')}
                         className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors flex items-center gap-2"
                       >
                         <X className="w-4 h-4" />
@@ -232,7 +271,7 @@ export function BookingsScreen() {
                   )}
                   {apt.status === 'confirmed' && (
                     <button
-                      onClick={() => handleStatusUpdate(apt.id, 'completed')}
+                      onClick={() => requestStatusUpdate(apt.id, 'completed')}
                       className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
                     >
                       Mark as Done
@@ -301,14 +340,14 @@ export function BookingsScreen() {
                   {apt.status === 'pending' && (
                     <>
                       <button
-                        onClick={() => handleStatusUpdate(apt.id, 'confirmed')}
+                        onClick={() => requestStatusUpdate(apt.id, 'confirmed')}
                         className="flex-1 py-2.5 bg-green-500 text-white rounded-lg font-medium hover:bg-green-600 transition-colors flex items-center justify-center gap-2"
                       >
                         <Check className="w-4 h-4" />
                         Approve
                       </button>
                       <button
-                        onClick={() => handleStatusUpdate(apt.id, 'cancelled')}
+                        onClick={() => requestStatusUpdate(apt.id, 'cancelled')}
                         className="flex-1 py-2.5 bg-red-500 text-white rounded-lg font-medium hover:bg-red-600 transition-colors flex items-center justify-center gap-2"
                       >
                         <X className="w-4 h-4" />
@@ -318,7 +357,7 @@ export function BookingsScreen() {
                   )}
                   {apt.status === 'confirmed' && (
                     <button
-                      onClick={() => handleStatusUpdate(apt.id, 'completed')}
+                      onClick={() => requestStatusUpdate(apt.id, 'completed')}
                       className="w-full py-2.5 bg-blue-500 text-white rounded-lg font-medium hover:bg-blue-600 transition-colors"
                     >
                       Mark as Done

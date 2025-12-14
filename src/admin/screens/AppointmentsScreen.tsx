@@ -4,6 +4,8 @@ import { getAllAppointments, type AppointmentWithDetails } from '../../api/admin
 import { adminUpdateBookingStatus } from '../../api/bookings';
 import { supabase } from '../../lib/supabase';
 import { AdminBookingModal } from '../components/AdminBookingModal';
+import { AppointmentDetailsModal } from '../../components/AppointmentDetailsModal';
+import { glamConfirm, glamError, glamSuccess } from '../../lib/glamAlerts';
 
 export function AppointmentsScreen() {
   const [appointments, setAppointments] = useState<AppointmentWithDetails[]>([]);
@@ -11,6 +13,9 @@ export function AppointmentsScreen() {
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [showBookingModal, setShowBookingModal] = useState(false);
+  const [selectedAppointment, setSelectedAppointment] = useState<AppointmentWithDetails | null>(null);
+  const [showDetailsModal, setShowDetailsModal] = useState(false);
+  const [updatingIds, setUpdatingIds] = useState<Record<number, boolean>>({});
 
   useEffect(() => {
     loadAppointments();
@@ -46,13 +51,63 @@ export function AppointmentsScreen() {
 
   const handleStatusUpdate = async (id: number, status: AppointmentWithDetails['status']) => {
     try {
+      setUpdatingIds(prev => ({ ...prev, [id]: true }));
       await adminUpdateBookingStatus(id, status);
       setAppointments(prev =>
         prev.map(apt => apt.id === id ? { ...apt, status } : apt)
       );
+
+      // Keep modal in sync if it's open
+      setSelectedAppointment(prev => (prev && prev.id === id ? { ...prev, status } : prev));
+
+      if (status === 'confirmed') glamSuccess('Appointment confirmed');
+      else if (status === 'completed') glamSuccess('Appointment marked as completed');
+      else if (status === 'cancelled') glamSuccess('Appointment cancelled');
+      else glamSuccess('Appointment updated');
     } catch (error) {
       console.error('Error updating status:', error);
+      glamError(error instanceof Error ? error.message : 'Failed to update appointment status');
     }
+    finally {
+      setUpdatingIds(prev => {
+        const next = { ...prev };
+        delete next[id];
+        return next;
+      });
+    }
+  };
+
+  const requestStatusUpdate = async (id: number, status: AppointmentWithDetails['status']) => {
+    const apt = appointments.find(a => a.id === id);
+    const confirmText = status === 'confirmed'
+      ? 'Yes, confirm'
+      : status === 'completed'
+        ? 'Yes, mark complete'
+        : status === 'cancelled'
+          ? 'Yes, cancel'
+          : 'Confirm';
+
+    const title = status === 'confirmed'
+      ? 'Confirm this appointment?'
+      : status === 'completed'
+        ? 'Mark this appointment as completed?'
+        : status === 'cancelled'
+          ? 'Cancel this appointment?'
+          : 'Update this appointment?';
+
+    const text = apt
+      ? `${apt.client_name || 'Client'} • ${apt.service_name || 'Service'} • ${new Date(apt.start_at).toLocaleString()}`
+      : 'Please confirm you want to proceed.';
+
+    const ok = await glamConfirm({ title, text, confirmText });
+    if (!ok) return;
+
+    await handleStatusUpdate(id, status);
+  };
+
+  const openDetails = (apt: AppointmentWithDetails) => {
+    setSelectedAppointment(apt);
+    setShowDetailsModal(true);
   };
 
   const filteredAppointments = appointments.filter(apt => {
@@ -128,6 +183,7 @@ export function AppointmentsScreen() {
           <span>New Booking</span>
         </button>
       </div>
+
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
@@ -268,14 +324,16 @@ export function AppointmentsScreen() {
                         {apt.status === 'pending' && (
                           <>
                             <button
-                              onClick={() => handleStatusUpdate(apt.id, 'confirmed')}
+                              onClick={() => void requestStatusUpdate(apt.id, 'confirmed')}
+                              disabled={!!updatingIds[apt.id]}
                               className="p-2 text-green-600 hover:bg-green-50 rounded-lg transition-colors"
                               title="Confirm"
                             >
                               <Check className="w-4 h-4" />
                             </button>
                             <button
-                              onClick={() => handleStatusUpdate(apt.id, 'cancelled')}
+                              onClick={() => void requestStatusUpdate(apt.id, 'cancelled')}
+                              disabled={!!updatingIds[apt.id]}
                               className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
                               title="Cancel"
                             >
@@ -285,17 +343,26 @@ export function AppointmentsScreen() {
                         )}
                         {apt.status === 'confirmed' && (
                           <button
-                            onClick={() => handleStatusUpdate(apt.id, 'completed')}
+                            onClick={() => void requestStatusUpdate(apt.id, 'completed')}
+                            disabled={!!updatingIds[apt.id]}
                             className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
                             title="Mark Complete"
                           >
                             <Check className="w-4 h-4" />
                           </button>
                         )}
-                        <button className="p-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors">
+                        <button
+                          onClick={() => openDetails(apt)}
+                          className="p-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+                          title="View details"
+                        >
                           <Eye className="w-4 h-4" />
                         </button>
-                        <button className="p-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors">
+                        <button
+                          onClick={() => openDetails(apt)}
+                          className="p-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+                          title="More"
+                        >
                           <MoreHorizontal className="w-4 h-4" />
                         </button>
                       </div>
@@ -332,6 +399,15 @@ export function AppointmentsScreen() {
         onClose={() => setShowBookingModal(false)}
         onBookingComplete={() => {
           loadAppointments();
+        }}
+      />
+
+      <AppointmentDetailsModal
+        isOpen={showDetailsModal}
+        appointment={selectedAppointment}
+        onClose={() => setShowDetailsModal(false)}
+        onUpdateStatus={async (id, status) => {
+          await requestStatusUpdate(id, status);
         }}
       />
     </div>

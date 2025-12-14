@@ -1,6 +1,21 @@
 import { supabase } from '../../lib/supabase';
 import type { Booking, BookingStatus } from '../types';
 
+export type ClientPaymentMethod = 'cash' | 'online' | 'visa';
+
+export type MockPaymentDetails = {
+  // DigiBank/Online
+  provider?: 'gcash' | 'maya' | 'paypal';
+  accountName?: string;
+  accountIdentifier?: string; // phone/email/username
+  reference?: string;
+
+  // Visa
+  cardholderName?: string;
+  cardLast4?: string;
+  cardExpiry?: string; // MM/YY
+};
+
 // Database response types
 interface DatabaseBooking {
   id: string | number;
@@ -187,5 +202,86 @@ export async function updateBookingStatus(
     .eq('id', bookingId);
 
   if (error) throw error;
+}
+
+export async function setBookingPaymentMethod(
+  bookingId: string,
+  method: ClientPaymentMethod
+): Promise<void> {
+  // Preferred: store in a dedicated column if present.
+  const { error } = await supabase
+    .from('bookings')
+    .update({ payment_method: method } as unknown as Record<string, unknown>)
+    .eq('id', bookingId);
+
+  if (!error) return;
+
+  const message = (error.message || '').toLowerCase();
+  const isMissingColumn = error.code === '42703' || (message.includes('column') && message.includes('payment_method'));
+  if (!isMissingColumn) throw error;
+
+  // Fallback: append to notes so staff/admin can still see the intent.
+  const { data: existing, error: selectError } = await supabase
+    .from('bookings')
+    .select('notes')
+    .eq('id', bookingId)
+    .maybeSingle();
+  if (selectError) throw selectError;
+
+  const label = method === 'cash' ? 'Cash' : method === 'online' ? 'DigiBank/Online' : 'Visa';
+  const prefix = `Payment method: ${label}`;
+  const nextNotes = existing?.notes
+    ? `${existing.notes}\n${prefix}`
+    : prefix;
+
+  const { error: updateError } = await supabase
+    .from('bookings')
+    .update({ notes: nextNotes })
+    .eq('id', bookingId);
+
+  if (updateError) throw updateError;
+}
+
+export async function upsertMockPaymentDetails(
+  bookingId: string,
+  paymentMethod: Exclude<ClientPaymentMethod, 'cash'>,
+  details: MockPaymentDetails
+): Promise<void> {
+  const { error } = await supabase
+    .from('booking_payment_details')
+    .upsert(
+      {
+        booking_id: bookingId,
+        payment_method: paymentMethod,
+        details,
+      } as unknown as Record<string, unknown>,
+      { onConflict: 'booking_id' }
+    );
+
+  if (!error) return;
+
+  const message = (error.message || '').toLowerCase();
+  const missingTable =
+    error.code === '42P01' || (message.includes('relation') && message.includes('does not exist'));
+  if (!missingTable) throw error;
+
+  // Fallback if the table hasn't been created yet: append to booking notes.
+  const prettyMethod = paymentMethod === 'online' ? 'DigiBank/Online' : 'Visa';
+  const prettyDetails = JSON.stringify(details);
+  const prefix = `Mock payment details (${prettyMethod}): ${prettyDetails}`;
+
+  const { data: existing, error: selectError } = await supabase
+    .from('bookings')
+    .select('notes')
+    .eq('id', bookingId)
+    .maybeSingle();
+  if (selectError) throw selectError;
+
+  const nextNotes = existing?.notes ? `${existing.notes}\n${prefix}` : prefix;
+  const { error: updateError } = await supabase
+    .from('bookings')
+    .update({ notes: nextNotes })
+    .eq('id', bookingId);
+  if (updateError) throw updateError;
 }
 

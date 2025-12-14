@@ -106,7 +106,15 @@ export function usePWAInstall() {
       instructions = 'To install this app:\n1. Look for install options in your browser menu\n2. Follow the prompts to add to home screen';
     }
 
-    alert(instructions);
+    // Show instructions with the same SweetAlert2 styling as the rest of the app.
+    // Fire-and-forget: this hook still returns the message for callers that want to display it.
+    void import('../lib/glamAlerts').then(({ glamInfoDialog }) =>
+      glamInfoDialog({
+        title: 'Install GlamQueue',
+        text: instructions,
+        confirmText: 'Got it',
+      })
+    );
     return { success: false, message: instructions };
   };
 

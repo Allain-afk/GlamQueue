@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
-import { User, Settings, LogOut, ChevronDown } from 'lucide-react';
+import { User, Settings, LogOut, ChevronDown, Crown, Clock } from 'lucide-react';
 import type { Profile } from '../api/profile';
+import { getActiveSubscription, type Subscription } from '../api/subscriptions';
 
 interface AvatarDropdownProps {
   profile: Profile | null;
@@ -12,7 +13,27 @@ interface AvatarDropdownProps {
 
 export function AvatarDropdown({ profile, onLogout, role = 'admin', onViewProfile, onEditProfile }: AvatarDropdownProps) {
   const [isOpen, setIsOpen] = useState(false);
+  const [subscription, setSubscription] = useState<Subscription | null>(null);
+  const [loadingSubscription, setLoadingSubscription] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
+
+  // Fetch subscription when dropdown opens (only for admin role)
+  useEffect(() => {
+    async function fetchSubscription() {
+      if (isOpen && role === 'admin' && profile?.id && !subscription) {
+        setLoadingSubscription(true);
+        try {
+          const sub = await getActiveSubscription(profile.id);
+          setSubscription(sub);
+        } catch (error) {
+          console.error('Error fetching subscription:', error);
+        } finally {
+          setLoadingSubscription(false);
+        }
+      }
+    }
+    fetchSubscription();
+  }, [isOpen, role, profile?.id, subscription]);
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
@@ -92,6 +113,61 @@ export function AvatarDropdown({ profile, onLogout, role = 'admin', onViewProfil
               </div>
             </div>
           </div>
+
+          {/* Subscription Status - Only for Admin */}
+          {role === 'admin' && (
+            <div className="px-4 py-3 border-b border-gray-200">
+              {loadingSubscription ? (
+                <div className="flex items-center gap-2">
+                  <div className="w-4 h-4 border-2 border-pink-300 border-t-pink-600 rounded-full animate-spin"></div>
+                  <span className="text-xs text-gray-500">Loading subscription...</span>
+                </div>
+              ) : subscription ? (
+                <div className="space-y-2">
+                  {subscription.plan_type === 'free-trial' ? (
+                    <div className="flex items-center gap-2 px-3 py-2 bg-amber-50 rounded-lg border border-amber-200">
+                      <Clock className="w-4 h-4 text-amber-600" />
+                      <div className="flex-1">
+                        <p className="text-xs font-semibold text-amber-700">Free 14-Day Trial</p>
+                        {subscription.trial_ends_at && (
+                          <p className="text-xs text-amber-600">
+                            {(() => {
+                              const daysLeft = Math.ceil((new Date(subscription.trial_ends_at).getTime() - Date.now()) / (1000 * 60 * 60 * 24));
+                              return daysLeft > 0 ? `${daysLeft} days remaining` : 'Trial expired';
+                            })()}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  ) : subscription.plan_type === 'pro' ? (
+                    <div className="flex items-center gap-2 px-3 py-2 bg-gradient-to-r from-pink-50 to-purple-50 rounded-lg border border-pink-200">
+                      <Crown className="w-4 h-4 text-pink-600" />
+                      <div className="flex-1">
+                        <p className="text-xs font-semibold text-pink-700">Pro Subscription</p>
+                        <p className="text-xs text-pink-600">Active • Full Access</p>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="flex items-center gap-2 px-3 py-2 bg-purple-50 rounded-lg border border-purple-200">
+                      <Crown className="w-4 h-4 text-purple-600" />
+                      <div className="flex-1">
+                        <p className="text-xs font-semibold text-purple-700 capitalize">{subscription.plan_type}</p>
+                        <p className="text-xs text-purple-600 capitalize">{subscription.status}</p>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <div className="flex items-center gap-2 px-3 py-2 bg-gray-50 rounded-lg border border-gray-200">
+                  <Clock className="w-4 h-4 text-gray-400" />
+                  <div className="flex-1">
+                    <p className="text-xs font-semibold text-gray-600">No Active Subscription</p>
+                    <p className="text-xs text-gray-500">Subscribe to unlock features</p>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
 
           {/* Menu Items */}
           <div className="py-2">

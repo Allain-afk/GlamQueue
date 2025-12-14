@@ -59,13 +59,66 @@ export async function adminUpdateBookingStatus(
   bookingId: number,
   status: BookingStatus
 ): Promise<void> {
-  const { error } = await supabase
+  // Prefer updating updated_at as well, but gracefully fallback if the column
+  // doesn't exist in the current schema.
+  const preferredUpdate = { status, updated_at: new Date().toISOString() };
+
+  const { error: preferredError } = await supabase
     .from('bookings')
-    .update({ status, updated_at: new Date().toISOString() })
+    .update(preferredUpdate)
     .eq('id', bookingId);
 
+  if (!preferredError) return;
+
+  const message = preferredError.message || '';
+  const mentionsMissingUpdatedAt =
+    message.includes('updated_at') &&
+    (message.includes('does not exist') || message.includes('unknown') || message.includes('column'));
+
+  if (mentionsMissingUpdatedAt) {
+    const { error: fallbackError } = await supabase
+      .from('bookings')
+      .update({ status })
+      .eq('id', bookingId);
+
+    if (fallbackError) {
+      console.error('Error updating booking status (fallback):', fallbackError);
+      throw fallbackError;
+    }
+    return;
+  }
+
+  console.error('Error updating booking status:', preferredError);
+  throw preferredError;
+}
+
+export type BookingPaymentMethod = 'cash' | 'online' | 'visa';
+
+export type BookingPaymentDetails = {
+  booking_id: string;
+  payment_method: BookingPaymentMethod;
+  details: Record<string, unknown>;
+  created_at: string;
+};
+
+export async function getBookingPaymentDetails(
+  bookingId: number | string
+): Promise<BookingPaymentDetails | null> {
+  const bookingIdText = String(bookingId);
+
+  const { data, error } = await supabase
+    .from('booking_payment_details')
+    .select('booking_id,payment_method,details,created_at')
+    .eq('booking_id', bookingIdText)
+    .maybeSingle();
+
   if (error) {
-    console.error('Error updating booking status:', error);
+    const message = (error.message || '').toLowerCase();
+    const missingTable =
+      error.code === '42P01' || (message.includes('relation') && message.includes('does not exist'));
+    if (missingTable) return null;
     throw error;
   }
+
+  return (data as unknown as BookingPaymentDetails) ?? null;
 }

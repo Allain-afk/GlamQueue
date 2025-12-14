@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Plus, MapPin, Phone, DollarSign, TrendingUp, Calendar, Edit, Trash2, Search } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { AddBranchModal } from '../components/AddBranchModal';
+import { glamConfirm, glamError, glamSuccess } from '../../lib/glamAlerts';
 
 interface Branch {
   id: string;
@@ -107,7 +108,12 @@ export function BranchesScreen() {
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm('Are you sure you want to delete this branch? This will also delete all associated services and bookings.')) return;
+    const ok = await glamConfirm({
+      title: 'Delete this branch?',
+      text: 'This will close the branch and may affect related services/bookings.',
+      confirmText: 'Yes, delete',
+    });
+    if (!ok) return;
 
     try {
       const { error } = await supabase
@@ -116,10 +122,11 @@ export function BranchesScreen() {
         .eq('id', id);
 
       if (error) throw error;
+      glamSuccess('Branch deleted');
       loadBranches();
     } catch (error) {
       console.error('Error deleting branch:', error);
-      alert('Failed to delete branch');
+      glamError('Failed to delete branch');
     }
   };
 

@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { ArrowLeft, Check, CreditCard, Lock, Shield, User, Mail, Phone, Building } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { createSubscriptionFromOnboarding, createPaymentRecord } from '../api/subscriptions';
+import { glamWarning } from '../lib/glamAlerts';
 import '../styles/components/onboarding-payment.css';
 
 export type PlanType = 'free-trial' | 'pro' | 'enterprise';
@@ -119,13 +120,13 @@ export function OnboardingPaymentScreen({ planType, onBack, onComplete }: Onboar
     if (currentStep === 1) {
       // Validate step 1 (user info)
       if (!formData.fullName || !formData.email || !formData.phone || !formData.businessName) {
-        alert('Please fill in all required fields');
+        glamWarning('Please fill in all required fields');
         return;
       }
       // Basic email validation
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
       if (!emailRegex.test(formData.email)) {
-        alert('Please enter a valid email address');
+        glamWarning('Please enter a valid email address');
         return;
       }
       setCurrentStep(2);
@@ -136,18 +137,18 @@ export function OnboardingPaymentScreen({ planType, onBack, onComplete }: Onboar
         handleSubmit();
       } else {
         if (!formData.cardNumber || !formData.cardHolder || !formData.expiryDate || !formData.cvv) {
-          alert('Please fill in all payment fields');
+          glamWarning('Please fill in all payment fields');
           return;
         }
         // Validate card number (should be 16 digits after removing spaces)
         const cardDigits = formData.cardNumber.replace(/\s/g, '');
         if (cardDigits.length !== 16) {
-          alert('Please enter a valid 16-digit card number');
+          glamWarning('Please enter a valid 16-digit card number');
           return;
         }
         // Validate CVV
         if (formData.cvv.length !== 3) {
-          alert('Please enter a valid 3-digit CVV');
+          glamWarning('Please enter a valid 3-digit CVV');
           return;
         }
         setCurrentStep(3);
