@@ -22,7 +22,7 @@ export function AdminLogin({ onLoginSuccess, onClientLogin, onBackToLanding, onN
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
-  const { signInWithEmail, sendOTP } = useAuth();
+  const { signInWithEmail, signInWithOAuth, sendOTP } = useAuth();
 
 
   const handleSendOtp = async () => {
@@ -154,6 +154,35 @@ export function AdminLogin({ onLoginSuccess, onClientLogin, onBackToLanding, onN
       } else {
         setError(errorMessage);
       }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSSO = async (provider: 'google' | 'azure') => {
+    setError(null);
+    setSuccess(null);
+
+    if (!isSupabaseConfigured) {
+      setError('Configuration Error: Supabase environment variables are not set.');
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const { error: ssoError } = await signInWithOAuth(provider);
+      if (ssoError) {
+        const errorMessage = ssoError.message || 'Unknown error';
+        if (errorMessage.includes('Failed to fetch') || errorMessage.includes('NetworkError') || errorMessage.includes('fetch')) {
+          setError('Network Error: Unable to connect to Supabase. Please check your VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY in Vercel environment variables.');
+        } else {
+          setError(`SSO sign-in failed: ${errorMessage}`);
+        }
+        return;
+      }
+
+      // Supabase OAuth typically redirects the browser; this message is mostly for cases where redirect is blocked.
+      setSuccess('Redirecting to sign-in provider...');
     } finally {
       setLoading(false);
     }
@@ -315,6 +344,27 @@ export function AdminLogin({ onLoginSuccess, onClientLogin, onBackToLanding, onN
                     isSignUp ? 'Send Verification Code' : 'Sign in'
                   )}
                 </button>
+
+                {!isSignUp && (
+                  <div className="space-y-2">
+                    <button
+                      type="button"
+                      disabled={loading}
+                      onClick={() => handleSSO('google')}
+                      className="w-full flex justify-center py-3 px-4 border border-gray-200 text-sm font-medium rounded-lg text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-pink-500 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      Continue with Google
+                    </button>
+                    <button
+                      type="button"
+                      disabled={loading}
+                      onClick={() => handleSSO('azure')}
+                      className="w-full flex justify-center py-3 px-4 border border-gray-200 text-sm font-medium rounded-lg text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-pink-500 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      Continue with Microsoft
+                    </button>
+                  </div>
+                )}
 
                 <div className="relative">
                   <div className="absolute inset-0 flex items-center">

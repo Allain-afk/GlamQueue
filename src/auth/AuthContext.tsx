@@ -12,6 +12,7 @@ type AuthResponse = {
 export type Ctx = {
   session: Session | null;
   signInWithEmail: (email: string, password: string) => Promise<{ error?: AuthError }>;
+  signInWithOAuth: (provider: 'google' | 'azure') => Promise<{ error?: AuthError }>;
   signUpWithEmail: (email: string, password: string) => Promise<{ data?: AuthResponse; error?: AuthError }>;
   sendOTP: (email: string, password: string) => Promise<{ code?: string; error?: Error | AuthError }>;
   verifyOTPCode: (email: string, code: string) => Promise<{ data?: AuthResponse; error?: Error | AuthError }>;
@@ -29,6 +30,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const signInWithEmail = async (email: string, password: string) => {
     const result = await supabase.auth.signInWithPassword({ email, password });
+    return { error: result.error || undefined };
+  };
+
+  const signInWithOAuth = async (provider: 'google' | 'azure') => {
+    const result = await supabase.auth.signInWithOAuth({
+      provider,
+      options: {
+        // Works with our state-machine app; session is picked up via detectSessionInUrl.
+        redirectTo: window.location.origin,
+      },
+    });
     return { error: result.error || undefined };
   };
 
@@ -113,7 +125,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const signOut = async () => { await supabase.auth.signOut(); };
 
   return (
-    <AuthContext.Provider value={{ session, signInWithEmail, signUpWithEmail, sendOTP, verifyOTPCode, signOut }}>
+    <AuthContext.Provider value={{ session, signInWithEmail, signInWithOAuth, signUpWithEmail, sendOTP, verifyOTPCode, signOut }}>
       {children}
     </AuthContext.Provider>
   );

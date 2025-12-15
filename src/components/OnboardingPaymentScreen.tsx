@@ -62,7 +62,6 @@ const planDetails = {
       'Unlimited appointments',
       'Dedicated success manager',
       'SLA & priority support',
-      'Custom integrations',
       'Security review & SSO'
     ]
   }

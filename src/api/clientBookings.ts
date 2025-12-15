@@ -72,7 +72,16 @@ export async function createBookingForClient(booking: {
       .select('*')
       .single();
 
-    if (error) throw error;
+    if (error) {
+      if (
+        error.code === 'P0001' &&
+        typeof error.message === 'string' &&
+        error.message.includes('DAILY_APPOINTMENT_LIMIT_REACHED')
+      ) {
+        throw new Error('Daily booking limit reached (100 appointments). Please select another date.');
+      }
+      throw error;
+    }
 
     // Fetch related data
     const [serviceResult, shopResult, profileResult] = await Promise.all([

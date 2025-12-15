@@ -596,7 +596,6 @@ export function RedesignedLandingPage({ onGetStarted, onLogin, onStartOnboarding
                 <li className="plan-feature">Unlimited appointments</li>
                 <li className="plan-feature">Dedicated success manager</li>
                 <li className="plan-feature">SLA & priority support</li>
-                <li className="plan-feature">Custom integrations</li>
                 <li className="plan-feature">Security review & SSO</li>
               </ul>
               <button 

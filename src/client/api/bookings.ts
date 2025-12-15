@@ -85,6 +85,15 @@ export async function createBooking(booking: {
   if (error) {
     console.error('Booking creation error:', error);
     // Provide more helpful error messages
+    if (
+      error.code === 'P0001' &&
+      typeof error.message === 'string' &&
+      (error.message.includes('DAILY_APPOINTMENT_LIMIT_REACHED') ||
+        error.message.includes('daily_appointment_limit') ||
+        error.message.toLowerCase().includes('appointment_limit'))
+    ) {
+      throw new Error('This salon has reached the daily booking limit (100 appointments). Please choose another date.');
+    }
     if (error.code === '42501') {
       throw new Error('Permission denied. Please check your Row Level Security policies.');
     } else if (error.code === '23503') {
