@@ -109,14 +109,14 @@ export function AddBranchModal({ isOpen, onClose, onBranchSaved, editingBranch }
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-2 sm:p-4">
+      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md max-h-[95vh] sm:max-h-[90vh] flex flex-col">
         {/* Header */}
-        <div className="bg-gradient-to-r from-pink-500 to-purple-500 p-6 text-white rounded-t-2xl">
+        <div className="bg-gradient-to-r from-pink-500 to-purple-500 p-4 sm:p-6 text-white rounded-t-2xl flex-shrink-0">
           <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-3">
-              <MapPin className="w-6 h-6" />
-              <h2 className="text-2xl font-bold">
+            <div className="flex items-center space-x-2 sm:space-x-3">
+              <MapPin className="w-5 h-5 sm:w-6 sm:h-6" />
+              <h2 className="text-xl sm:text-2xl font-bold">
                 {editingBranch ? 'Edit Branch' : 'Add New Branch'}
               </h2>
             </div>
@@ -124,13 +124,13 @@ export function AddBranchModal({ isOpen, onClose, onBranchSaved, editingBranch }
               onClick={onClose}
               className="p-2 hover:bg-white/20 rounded-lg transition-colors"
             >
-              <X className="w-6 h-6" />
+              <X className="w-5 h-5 sm:w-6 sm:h-6" />
             </button>
           </div>
         </div>
 
-        {/* Form */}
-        <form onSubmit={handleSubmit} className="p-6 space-y-4">
+        {/* Form - Scrollable */}
+        <form onSubmit={handleSubmit} className="p-4 sm:p-6 space-y-4 overflow-y-auto flex-1">
           {error && (
             <div className="p-4 bg-red-50 border border-red-200 rounded-lg text-red-700">
               {error}

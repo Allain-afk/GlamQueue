@@ -102,12 +102,12 @@ export function AppointmentDetailsModal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden">
-        <div className="bg-gradient-to-r from-pink-500 to-purple-500 px-6 py-4 text-white">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-2 sm:p-4">
+      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg max-h-[95vh] sm:max-h-[90vh] overflow-hidden flex flex-col">
+        <div className="bg-gradient-to-r from-pink-500 to-purple-500 px-4 sm:px-6 py-4 text-white flex-shrink-0">
           <div className="flex items-start justify-between gap-4">
             <div>
-              <h2 className="text-lg font-bold">Appointment #{appointment.id}</h2>
+              <h2 className="text-base sm:text-lg font-bold">Appointment #{appointment.id}</h2>
               <div className="mt-2 inline-flex px-3 py-1 rounded-full text-xs font-semibold border bg-white/10 border-white/20">
                 {appointment.status}
               </div>
@@ -122,7 +122,7 @@ export function AppointmentDetailsModal({
           </div>
         </div>
 
-        <div className="p-6 space-y-4">
+        <div className="p-4 sm:p-6 space-y-4 overflow-y-auto flex-1">
           {error && (
             <div className="p-3 rounded-lg border border-red-200 bg-red-50 text-red-700 text-sm">
               {error}

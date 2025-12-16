@@ -129,31 +129,31 @@ export function AIInsightsModal({ isOpen, onClose, dashboardStats, appointments 
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-2 sm:p-4">
+      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[95vh] sm:max-h-[90vh] overflow-hidden flex flex-col">
         {/* Header */}
-        <div className="bg-gradient-to-r from-purple-500 to-pink-500 p-6 text-white">
+        <div className="bg-gradient-to-r from-purple-500 to-pink-500 p-4 sm:p-6 text-white flex-shrink-0">
           <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-3">
-              <div className="bg-white/20 p-2 rounded-lg">
-                <Sparkles className="w-6 h-6" />
+            <div className="flex items-center space-x-2 sm:space-x-3">
+              <div className="bg-white/20 p-1.5 sm:p-2 rounded-lg">
+                <Sparkles className="w-5 h-5 sm:w-6 sm:h-6" />
               </div>
               <div>
-                <h2 className="text-2xl font-bold">AI Insights</h2>
-                <p className="text-sm text-white/90">Comprehensive optimization suggestions</p>
+                <h2 className="text-xl sm:text-2xl font-bold">AI Insights</h2>
+                <p className="text-xs sm:text-sm text-white/90">Comprehensive optimization suggestions</p>
               </div>
             </div>
             <button
               onClick={onClose}
               className="p-2 hover:bg-white/20 rounded-lg transition-colors"
             >
-              <X className="w-6 h-6" />
+              <X className="w-5 h-5 sm:w-6 sm:h-6" />
             </button>
           </div>
         </div>
 
         {/* Content */}
-        <div className="flex-1 overflow-y-auto p-6">
+        <div className="flex-1 overflow-y-auto p-4 sm:p-6">
           {insights.length === 0 ? (
             <div className="text-center py-12">
               <Lightbulb className="w-16 h-16 text-gray-400 mx-auto mb-4" />
