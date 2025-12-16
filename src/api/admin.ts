@@ -1,4 +1,5 @@
 import { supabase } from '../lib/supabase';
+import { getCurrentOrganizationId } from './multiTenancy';
 
 // ============= TYPES =============
 
@@ -76,6 +77,9 @@ export interface TopClient {
 
 export async function getDashboardStats(): Promise<DashboardStats> {
   try {
+    // Get organization_id for multi-tenancy filtering
+    const organizationId = await getCurrentOrganizationId();
+    
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     const todayStr = today.toISOString();
@@ -88,21 +92,33 @@ export async function getDashboardStats(): Promise<DashboardStats> {
     yesterday.setDate(yesterday.getDate() - 1);
     const yesterdayStr = yesterday.toISOString();
 
-    // Get today's bookings with service prices
-    const { data: todayBookings, error: todayError } = await supabase
+    // Get today's bookings with service prices - filtered by organization
+    let todayQuery = supabase
       .from('bookings')
       .select('service_id, status, start_at')
       .gte('start_at', todayStr)
       .lt('start_at', tomorrowStr);
+    
+    if (organizationId) {
+      todayQuery = todayQuery.eq('organization_id', organizationId);
+    }
+    
+    const { data: todayBookings, error: todayError } = await todayQuery;
 
     if (todayError) throw todayError;
 
-    // Get yesterday's bookings with service prices
-    const { data: yesterdayBookings, error: yesterdayError } = await supabase
+    // Get yesterday's bookings with service prices - filtered by organization
+    let yesterdayQuery = supabase
       .from('bookings')
       .select('service_id, status, start_at')
       .gte('start_at', yesterdayStr)
       .lt('start_at', todayStr);
+    
+    if (organizationId) {
+      yesterdayQuery = yesterdayQuery.eq('organization_id', organizationId);
+    }
+    
+    const { data: yesterdayBookings, error: yesterdayError } = await yesterdayQuery;
 
     if (yesterdayError) throw yesterdayError;
 
@@ -379,12 +395,22 @@ export async function getTodayAppointments(): Promise<AppointmentWithDetails[]> 
 
 export async function getAllAppointments(limit = 50): Promise<AppointmentWithDetails[]> {
   try {
-    // Fetch all bookings
-    const { data: bookings, error: bookingsError } = await supabase
+    // Get organization_id for multi-tenancy filtering
+    const organizationId = await getCurrentOrganizationId();
+    
+    // Fetch bookings filtered by organization
+    let bookingsQuery = supabase
       .from('bookings')
       .select('*')
       .order('start_at', { ascending: false })
       .limit(limit);
+    
+    // Filter by organization_id if available (multi-tenancy)
+    if (organizationId) {
+      bookingsQuery = bookingsQuery.eq('organization_id', organizationId);
+    }
+    
+    const { data: bookings, error: bookingsError } = await bookingsQuery;
 
     if (bookingsError) {
       console.error('Error fetching bookings:', bookingsError);
@@ -493,12 +519,21 @@ export async function getStaffMembers(): Promise<StaffMember[]> {
 
 export async function getTopClients(limit = 10): Promise<TopClient[]> {
   try {
-    // Get all bookings grouped by client
-    const { data: bookings, error: bookingsError } = await supabase
+    // Get organization_id for multi-tenancy filtering
+    const organizationId = await getCurrentOrganizationId();
+    
+    // Get all bookings grouped by client - filtered by organization
+    let bookingsQuery = supabase
       .from('bookings')
       .select('client_id, service_id, start_at, status')
       .eq('status', 'completed')
       .order('created_at', { ascending: false });
+    
+    if (organizationId) {
+      bookingsQuery = bookingsQuery.eq('organization_id', organizationId);
+    }
+    
+    const { data: bookings, error: bookingsError } = await bookingsQuery;
 
     if (bookingsError) throw bookingsError;
     if (!bookings || bookings.length === 0) return [];
@@ -585,6 +620,9 @@ export async function getTopClients(limit = 10): Promise<TopClient[]> {
 
 export async function getAllClients(): Promise<Client[]> {
   try {
+    // Get organization_id for multi-tenancy filtering
+    const organizationId = await getCurrentOrganizationId();
+    
     const { data: profiles, error: profilesError } = await supabase
       .from('profiles')
       .select('*')
@@ -594,10 +632,17 @@ export async function getAllClients(): Promise<Client[]> {
     if (profilesError) throw profilesError;
 
     // Get only completed bookings to match getTopClients logic (only completed bookings generate revenue)
-    const { data: bookings, error: bookingsError } = await supabase
+    // Filter by organization_id if available
+    let bookingsQuery = supabase
       .from('bookings')
       .select('client_id, service_id, status, start_at')
       .eq('status', 'completed');
+    
+    if (organizationId) {
+      bookingsQuery = bookingsQuery.eq('organization_id', organizationId);
+    }
+    
+    const { data: bookings, error: bookingsError } = await bookingsQuery;
 
     if (bookingsError) throw bookingsError;
 

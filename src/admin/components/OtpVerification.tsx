@@ -166,6 +166,7 @@ export function OtpVerification({ email, password, onVerificationSuccess, onBack
             name: null,
             profile_picture: null,
             role: 'client',
+            organization_id: null, // Clients are global (no organization)
             created_at: new Date().toISOString(),
           };
           onVerificationSuccess(defaultProfile);

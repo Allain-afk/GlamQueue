@@ -6,7 +6,9 @@ export type Profile = {
   name: string | null;
   profile_picture: string | null;
   role: 'client' | 'staff' | 'manager' | 'admin';
+  organization_id: string | null; // NULL for clients (global users)
   created_at: string;
+  updated_at?: string;
 };
 
 export async function getMyProfile(): Promise<Profile | null> {
@@ -14,7 +16,7 @@ export async function getMyProfile(): Promise<Profile | null> {
   if (!user) return null;
   const { data, error } = await supabase
     .from('profiles')
-    .select('id,email,name,profile_picture,role,created_at')
+    .select('id,email,name,profile_picture,role,organization_id,created_at,updated_at')
     .eq('id', user.id)
     .single();
   if (error) throw error;
@@ -29,7 +31,7 @@ export async function updateProfile(updates: { name?: string; profile_picture?: 
     .from('profiles')
     .update(updates)
     .eq('id', user.id)
-    .select('id,email,name,profile_picture,role,created_at')
+    .select('id,email,name,profile_picture,role,organization_id,created_at,updated_at')
     .single();
   
   if (error) throw error;

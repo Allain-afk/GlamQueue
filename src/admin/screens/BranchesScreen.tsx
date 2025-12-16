@@ -3,6 +3,7 @@ import { Plus, MapPin, Phone, DollarSign, TrendingUp, Calendar, Edit, Trash2, Se
 import { supabase } from '../../lib/supabase';
 import { AddBranchModal } from '../components/AddBranchModal';
 import { glamConfirm, glamError, glamSuccess } from '../../lib/glamAlerts';
+import { getCurrentOrganizationId } from '../../api/multiTenancy';
 
 interface Branch {
   id: string;
@@ -36,10 +37,23 @@ export function BranchesScreen() {
     try {
       setLoading(true);
       
-      // Fetch all shops
+      // Get the current user's organization_id for multi-tenancy filtering
+      const organizationId = await getCurrentOrganizationId();
+      console.log('[BranchesScreen] Organization ID:', organizationId);
+      
+      // IMPORTANT: If no organization ID, admin should see NO shops (not all shops)
+      if (!organizationId) {
+        console.warn('[BranchesScreen] No organization ID found - showing empty branches');
+        setBranches([]);
+        setLoading(false);
+        return;
+      }
+      
+      // Fetch shops filtered by organization
       const { data: shopsData, error: shopsError } = await supabase
         .from('shops')
         .select('*')
+        .eq('organization_id', organizationId)
         .order('created_at', { ascending: false });
 
       if (shopsError) throw shopsError;

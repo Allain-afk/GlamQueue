@@ -3,6 +3,7 @@ import { Plus, Edit, Trash2, Search, Scissors } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { AddServiceModal } from '../components/AddServiceModal';
 import { glamConfirm, glamError, glamSuccess } from '../../lib/glamAlerts';
+import { getCurrentOrganizationId } from '../../api/multiTenancy';
 
 interface Service {
   id: string;
@@ -31,13 +32,24 @@ export function ServicesScreen() {
   const loadServices = async () => {
     try {
       setLoading(true);
-      const { data, error } = await supabase
+      
+      // Get organization_id for multi-tenancy filtering
+      const organizationId = await getCurrentOrganizationId();
+      
+      let servicesQuery = supabase
         .from('services')
         .select(`
           *,
           shop:shops(id, name)
         `)
         .order('created_at', { ascending: false });
+      
+      // Filter by organization_id if available (multi-tenancy)
+      if (organizationId) {
+        servicesQuery = servicesQuery.eq('organization_id', organizationId);
+      }
+      
+      const { data, error } = await servicesQuery;
 
       if (error) throw error;
 

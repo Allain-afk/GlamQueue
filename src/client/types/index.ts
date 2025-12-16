@@ -10,6 +10,7 @@ export interface Service {
   duration: number; // in minutes
   category: string;
   shop_id: string;
+  organization_id?: string; // Multi-tenancy: denormalized for RLS
   shop_name: string;
   shop_address: string;
   image_url?: string;
@@ -19,6 +20,7 @@ export interface Service {
 
 export interface Shop {
   id: string;
+  organization_id?: string; // Multi-tenancy: links to organization (tenant)
   name: string;
   address: string;
   rating: number;
@@ -35,6 +37,7 @@ export interface Booking {
   user_id: string;
   service_id: string;
   shop_id: string;
+  organization_id?: string; // Multi-tenancy: auto-set from shop
   date_time: string;
   status: BookingStatus;
   notes?: string;

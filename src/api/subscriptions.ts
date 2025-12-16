@@ -6,6 +6,7 @@ export type SubscriptionStatus = 'active' | 'cancelled' | 'expired' | 'suspended
 export interface Subscription {
   id: string;
   user_id: string;
+  organization_id?: string | null; // Multi-tenancy: links to organization
   plan_type: PlanType;
   status: SubscriptionStatus;
   started_at: string;

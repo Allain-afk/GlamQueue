@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { ArrowLeft, Check, CreditCard, Lock, Shield, User, Mail, Phone, Building } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { createSubscriptionFromOnboarding, createPaymentRecord } from '../api/subscriptions';
+import { createNewTenant } from '../api/multiTenancy';
 import { glamWarning } from '../lib/glamAlerts';
 import '../styles/components/onboarding-payment.css';
 
@@ -176,7 +177,22 @@ export function OnboardingPaymentScreen({ planType, onBack, onComplete }: Onboar
         return;
       }
 
-      // Calculate price
+      // Step 1: Create the tenant/organization first
+      const tenantResult = await createNewTenant({
+        userId: user.id,
+        orgName: formData.businessName || 'My Salon',
+        userName: formData.fullName,
+        userEmail: formData.email || user.email,
+      });
+
+      if (!tenantResult.success) {
+        console.error('Failed to create tenant:', tenantResult.error);
+        // Continue anyway - subscription can still be created
+      } else {
+        console.log('Tenant created:', tenantResult.organization_id);
+      }
+
+      // Step 2: Calculate price
       const price = planType === 'pro' ? 1499.00 : planType === 'enterprise' ? 0 : 0;
       const billingPeriod = planType === 'enterprise' ? 'yearly' : 'monthly';
 

@@ -10,6 +10,7 @@ import { type Profile } from './api/profile';
 import { getMyProfile } from './api/profile';
 import { hasActiveSubscription } from './api/subscriptions';
 import { createSubscriptionFromOnboarding, createPaymentRecord } from './api/subscriptions';
+import { createNewTenant } from './api/multiTenancy';
 import './index.css';
 
 // Lazy load heavy components for code splitting
@@ -72,7 +73,22 @@ function AppContent() {
         return;
       }
 
-      // Calculate price
+      // Step 1: Create the tenant/organization first
+      const tenantResult = await createNewTenant({
+        userId: session.user.id,
+        orgName: formData.businessName || 'My Salon',
+        userName: formData.fullName,
+        userEmail: formData.email || session.user.email,
+      });
+
+      if (!tenantResult.success) {
+        console.error('Failed to create tenant:', tenantResult.error);
+        // Continue anyway - subscription can still be created
+      } else {
+        console.log('Tenant created:', tenantResult.organization_id);
+      }
+
+      // Step 2: Calculate price
       const price = planType === 'pro' ? 1499.00 : planType === 'enterprise' ? 0 : 0;
       const billingPeriod = planType === 'enterprise' ? 'yearly' : 'monthly';
 
@@ -130,6 +146,15 @@ function AppContent() {
       }
 
       try {
+        // IMPORTANT: Handle pending subscription FIRST before checking profile role
+        // This ensures the user gets upgraded to admin before we redirect
+        const pendingData = localStorage.getItem('pending_subscription');
+        if (pendingData) {
+          console.log('Found pending subscription, processing before role check...');
+          await handlePendingSubscription();
+          // Re-fetch profile after processing pending subscription
+        }
+
         const profile = await getMyProfile();
         console.log('Session check - Profile:', profile);
         if (profile) {
@@ -167,7 +192,7 @@ function AppContent() {
     };
 
     checkSessionAndRedirect();
-  }, [session]);
+  }, [session, handlePendingSubscription]);
 
   // Handle auth callback from email confirmation
   useEffect(() => {
