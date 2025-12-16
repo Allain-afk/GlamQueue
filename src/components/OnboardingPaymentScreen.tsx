@@ -49,9 +49,9 @@ const planDetails = {
     features: [
       '100 Appointments per day',
       'Client CRM & loyalty tools',
-      'AI scheduling & chatbot',
-      'Multibranch support',
-      'Advanced analytics'
+      'Up to 5 branches',
+      'AI Chatbot & Advanced analytics',
+      'Email & chat support'
     ]
   },
   'enterprise': {
@@ -60,10 +60,14 @@ const planDetails = {
     period: 'billed annually',
     description: 'For large salon chains',
     features: [
+      'Everything in Pro, plus:',
       'Unlimited appointments',
+      'Unlimited branches',
       'Dedicated success manager',
       'SLA & priority support',
-      'Security review & SSO'
+      'Security review & SSO',
+      'Custom integrations',
+      'White-label options'
     ]
   }
 };

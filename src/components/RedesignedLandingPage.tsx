@@ -575,9 +575,9 @@ export function RedesignedLandingPage({ onGetStarted, onLogin, onStartOnboarding
               <ul className="plan-features">
                 <li className="plan-feature">100 Appointments per day</li>
                 <li className="plan-feature">Client CRM & loyalty tools</li>
-                <li className="plan-feature">AI scheduling & chatbot</li>
-                <li className="plan-feature">Multibranch support</li>
-                <li className="plan-feature">Advanced analytics</li>
+                <li className="plan-feature">Up to 5 branches</li>
+                <li className="plan-feature">AI Chatbot & Advanced analytics</li>
+                <li className="plan-feature">Email & chat support</li>
               </ul>
               <button 
                 className="pricing-btn" 
@@ -592,11 +592,15 @@ export function RedesignedLandingPage({ onGetStarted, onLogin, onStartOnboarding
               <h3 className="plan-name">Enterprise</h3>
               <div className="plan-price">Custom Pricing</div>
               <div className="plan-period">billed annually</div>
+              <p className="enterprise-badge">Everything in Pro, plus:</p>
               <ul className="plan-features">
                 <li className="plan-feature">Unlimited appointments</li>
+                <li className="plan-feature">Unlimited branches</li>
                 <li className="plan-feature">Dedicated success manager</li>
                 <li className="plan-feature">SLA & priority support</li>
                 <li className="plan-feature">Security review & SSO</li>
+                <li className="plan-feature">Custom integrations</li>
+                <li className="plan-feature">White-label options</li>
               </ul>
               <button 
                 className="pricing-btn" 

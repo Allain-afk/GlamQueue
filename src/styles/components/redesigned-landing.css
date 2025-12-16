@@ -1179,6 +1179,17 @@ html {
   margin-bottom: 2rem;
 }
 
+.enterprise-badge {
+  background: linear-gradient(135deg, #e91e8c 0%, #9c27b0 100%);
+  color: white;
+  font-size: 0.85rem;
+  font-weight: 600;
+  padding: 0.5rem 1rem;
+  border-radius: 1rem;
+  margin-bottom: 1rem;
+  display: inline-block;
+}
+
 .plan-features {
   list-style: none;
   margin-bottom: 2rem;

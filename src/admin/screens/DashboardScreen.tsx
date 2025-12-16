@@ -13,9 +13,14 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContai
 import { useAdminData } from '../context/AdminDataContext';
 import { AIInsightsCard } from '../components/AIInsightsCard';
 import { WalkInBookingModal } from '../components/WalkInBookingModal';
+import { SuccessManagerCard } from '../components/SuccessManagerCard';
+import { getActiveSubscription, type Subscription } from '../../api/subscriptions';
+import { useAuth } from '../../auth/useAuth';
 
 export function DashboardScreen() {
   const [showWalkInModal, setShowWalkInModal] = useState(false);
+  const [subscription, setSubscription] = useState<Subscription | null>(null);
+  const { session } = useAuth();
   const {
     dashboardStats,
     todayAppointments,
@@ -43,6 +48,21 @@ export function DashboardScreen() {
     };
     loadData();
   }, []); // Only run once on mount
+
+  // Fetch subscription to check for Enterprise
+  useEffect(() => {
+    async function fetchSub() {
+      if (session?.user?.id) {
+        try {
+          const sub = await getActiveSubscription(session.user.id);
+          setSubscription(sub);
+        } catch (error) {
+          console.error('Error fetching subscription:', error);
+        }
+      }
+    }
+    fetchSub();
+  }, [session?.user?.id]);
 
   // Memoize formatted functions to prevent re-creation
   const formatCurrency = useMemo(() => {
@@ -117,11 +137,28 @@ export function DashboardScreen() {
 
   return (
     <div className="space-y-6">
-      {/* AI Insights Card */}
-      <AIInsightsCard 
-        dashboardStats={dashboardStats ?? undefined}
-        appointments={todayAppointments}
-      />
+      {/* Enterprise Success Manager Card */}
+      {subscription?.plan_type === 'enterprise' && (
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div className="lg:col-span-2">
+            <AIInsightsCard 
+              dashboardStats={dashboardStats ?? undefined}
+              appointments={todayAppointments}
+            />
+          </div>
+          <div className="lg:col-span-1">
+            <SuccessManagerCard />
+          </div>
+        </div>
+      )}
+
+      {/* AI Insights Card (for non-Enterprise) */}
+      {subscription?.plan_type !== 'enterprise' && (
+        <AIInsightsCard 
+          dashboardStats={dashboardStats ?? undefined}
+          appointments={todayAppointments}
+        />
+      )}
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
