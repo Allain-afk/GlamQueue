@@ -122,3 +122,18 @@ export async function getBookingPaymentDetails(
 
   return (data as unknown as BookingPaymentDetails) ?? null;
 }
+
+/**
+ * Delete a booking/appointment from the database
+ */
+export async function adminDeleteBooking(bookingId: number): Promise<void> {
+  const { error } = await supabase
+    .from('bookings')
+    .delete()
+    .eq('id', bookingId);
+
+  if (error) {
+    console.error('Error deleting booking:', error);
+    throw error;
+  }
+}

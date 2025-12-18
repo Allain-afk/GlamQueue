@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
+import { useNavigate, useLocation, Routes, Route, Navigate } from 'react-router-dom';
 import { Search } from 'lucide-react';
 import { getMyProfile, type Profile } from '../../api/profile';
 import { AdminDataProvider } from '../context/AdminDataContext';
@@ -35,28 +36,53 @@ const tabToNavItem: Record<TabType, AdminNavItem> = {
 };
 
 export function NewAdminDashboard({ onLogout }: NewAdminDashboardProps) {
+  const navigate = useNavigate();
+  const location = useLocation();
   const [profile, setProfile] = useState<Profile | null>(null);
-  const [activeTab, setActiveTab] = useState<TabType>('dashboard');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showEditProfile, setShowEditProfile] = useState(false);
   const [showMobileMoreMenu, setShowMobileMoreMenu] = useState(false);
+
+  // Get active tab from URL path
+  const getActiveTabFromPath = (): TabType => {
+    const path = location.pathname;
+    if (path.includes('/appointments')) return 'appointments';
+    if (path.includes('/clients')) return 'clients';
+    if (path.includes('/staff')) return 'staff';
+    if (path.includes('/analytics')) return 'analytics';
+    if (path.includes('/marketing')) return 'marketing';
+    if (path.includes('/services')) return 'services';
+    if (path.includes('/branches')) return 'branches';
+    return 'dashboard';
+  };
+
+  const activeTab = getActiveTabFromPath();
+
+  // Handle tab navigation
+  const handleTabChange = (tab: TabType) => {
+    if (tab === 'dashboard') {
+      navigate('/admin-dashboard');
+    } else {
+      navigate(`/admin-dashboard/${tab}`);
+    }
+  };
 
   // Handle mobile navigation
   const handleMobileNavigate = (item: AdminNavItem) => {
     setShowMobileMoreMenu(false);
     switch (item) {
       case 'dashboard':
-        setActiveTab('dashboard');
+        navigate('/admin-dashboard');
         break;
       case 'appointments':
-        setActiveTab('appointments');
+        navigate('/admin-dashboard/appointments');
         break;
       case 'clients':
-        setActiveTab('clients');
+        navigate('/admin-dashboard/clients');
         break;
       case 'analytics':
-        setActiveTab('analytics');
+        navigate('/admin-dashboard/analytics');
         break;
       case 'more':
         setShowMobileMoreMenu(true);
@@ -103,20 +129,6 @@ export function NewAdminDashboard({ onLogout }: NewAdminDashboardProps) {
     { id: 'branches' as TabType, label: 'Branches' },
   ];
 
-  // Memoize the active screen BEFORE early returns (Para optimized ang dashboard every screen render, dli lag HAHAHAH magic!!!)
-  const ActiveScreen = useMemo(() => {
-    switch (activeTab) {
-      case 'dashboard': return <DashboardScreen />;
-      case 'appointments': return <AppointmentsScreen />;
-      case 'clients': return <ClientsScreen />;
-      case 'staff': return <StaffScreen />;
-      case 'analytics': return <AnalyticsScreen />;
-      case 'marketing': return <MarketingScreen />;
-      case 'services': return <ServicesScreen />;
-      case 'branches': return <BranchesScreen />;
-      default: return <DashboardScreen />;
-    }
-  }, [activeTab]);
 
   if (loading) {
     return (
@@ -186,7 +198,7 @@ export function NewAdminDashboard({ onLogout }: NewAdminDashboardProps) {
               <NotificationDropdown 
                 role="admin" 
                 onNotificationClick={(_appointmentId) => {
-                  setActiveTab('appointments');
+                  navigate('/admin-dashboard/appointments');
                   // Optionally scroll to the appointment or highlight it
                   // You can add more logic here if needed
                 }}
@@ -217,7 +229,7 @@ export function NewAdminDashboard({ onLogout }: NewAdminDashboardProps) {
             {tabs.map((tab) => (
               <button
                 key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
+                onClick={() => handleTabChange(tab.id)}
                 className={`px-6 py-3 text-sm font-medium border-b-2 transition-colors ${
                   activeTab === tab.id
                     ? 'border-[#FF5A5F] text-[#FF5A5F] bg-red-50'
@@ -236,7 +248,7 @@ export function NewAdminDashboard({ onLogout }: NewAdminDashboardProps) {
             {tabs.map((tab) => (
               <button
                 key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
+                onClick={() => handleTabChange(tab.id)}
                 className={`px-4 py-2 rounded-full text-sm font-semibold whitespace-nowrap transition-colors ${
                   activeTab === tab.id
                     ? 'bg-pink-600 text-white'
@@ -252,7 +264,17 @@ export function NewAdminDashboard({ onLogout }: NewAdminDashboardProps) {
 
         {/* Main Content */}
         <main className="max-w-[1600px] mx-auto px-6 py-8">
-          {ActiveScreen}
+          <Routes>
+            <Route index element={<DashboardScreen />} />
+            <Route path="appointments" element={<AppointmentsScreen />} />
+            <Route path="clients" element={<ClientsScreen />} />
+            <Route path="staff" element={<StaffScreen />} />
+            <Route path="analytics" element={<AnalyticsScreen />} />
+            <Route path="marketing" element={<MarketingScreen />} />
+            <Route path="services" element={<ServicesScreen />} />
+            <Route path="branches" element={<BranchesScreen />} />
+            <Route path="*" element={<Navigate to="/admin-dashboard" replace />} />
+          </Routes>
         </main>
 
         {/* Footer - Desktop Only */}
@@ -299,7 +321,7 @@ export function NewAdminDashboard({ onLogout }: NewAdminDashboardProps) {
                       key={item.id}
                       type="button"
                       onClick={() => {
-                        setActiveTab(item.id);
+                        handleTabChange(item.id);
                         setShowMobileMoreMenu(false);
                       }}
                       className={`w-full text-left px-4 py-3 rounded-xl text-sm font-semibold transition-colors ${

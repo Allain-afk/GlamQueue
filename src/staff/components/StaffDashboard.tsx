@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useNavigate, useLocation, Routes, Route, Navigate } from 'react-router-dom';
 import { getMyProfile, type Profile } from '../../api/profile';
 import { BookingsScreen } from '../screens/BookingsScreen';
 import { NotificationDropdown } from '../../components/NotificationDropdown';
@@ -14,15 +15,36 @@ interface StaffDashboardProps {
 type StaffView = 'schedule' | 'clients' | 'profile';
 
 export function StaffDashboard({ onLogout }: StaffDashboardProps) {
+  const navigate = useNavigate();
+  const location = useLocation();
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [activeView, setActiveView] = useState<StaffView>('schedule');
   const [showEditProfile, setShowEditProfile] = useState(false);
+
+  // Get active view from URL path
+  const getActiveViewFromPath = (): StaffView => {
+    const path = location.pathname;
+    if (path.includes('/clients')) return 'clients';
+    if (path.includes('/profile')) return 'profile';
+    return 'schedule';
+  };
+
+  const activeView = getActiveViewFromPath();
+
+  // Handle view navigation
+  const handleViewChange = (view: StaffView) => {
+    if (view === 'schedule') {
+      navigate('/staff-dashboard');
+    } else {
+      navigate(`/staff-dashboard/${view}`);
+    }
+  };
 
   // Handle mobile navigation
   const handleMobileNavigate = (item: StaffNavItem) => {
-    setActiveView(item as StaffView);
+    const view = item as StaffView;
+    handleViewChange(view);
   };
 
   useEffect(() => {
@@ -84,47 +106,40 @@ export function StaffDashboard({ onLogout }: StaffDashboardProps) {
     );
   }
 
-  // Render view content
-  const renderContent = () => {
-    switch (activeView) {
-      case 'schedule':
-        return <BookingsScreen />;
-      case 'clients':
-        return (
-          <div className="text-center py-12">
-            <h2 className="text-xl font-semibold text-gray-900 mb-2">My Clients</h2>
-            <p className="text-gray-600">Client list coming soon...</p>
+  // Profile component
+  const ProfileView = () => {
+    const displayName = profile?.email?.split('@')[0] || 'Staff Member';
+    return (
+      <div className="bg-white rounded-xl p-6 shadow-sm border border-pink-100">
+        <div className="flex items-center gap-4 mb-6">
+          <div className="w-16 h-16 bg-gradient-to-br from-pink-500 to-purple-600 rounded-full flex items-center justify-center text-white text-2xl font-bold">
+            {displayName.charAt(0).toUpperCase()}
           </div>
-        );
-      case 'profile': {
-        const displayName = profile?.email?.split('@')[0] || 'Staff Member';
-        return (
-          <div className="bg-white rounded-xl p-6 shadow-sm border border-pink-100">
-            <div className="flex items-center gap-4 mb-6">
-              <div className="w-16 h-16 bg-gradient-to-br from-pink-500 to-purple-600 rounded-full flex items-center justify-center text-white text-2xl font-bold">
-                {displayName.charAt(0).toUpperCase()}
-              </div>
-              <div className="text-left">
-                <h2 className="text-xl font-bold text-gray-900">{displayName}</h2>
-                <p className="text-gray-600">{profile?.email}</p>
-                <span className="inline-block mt-1 px-3 py-1 bg-pink-100 text-pink-700 rounded-full text-sm font-medium capitalize">
-                  {profile?.role}
-                </span>
-              </div>
-            </div>
-            <button
-              onClick={onLogout}
-              className="w-full py-3 bg-red-50 text-red-600 rounded-lg font-medium hover:bg-red-100 transition-colors"
-            >
-              Sign Out
-            </button>
+          <div className="text-left">
+            <h2 className="text-xl font-bold text-gray-900">{displayName}</h2>
+            <p className="text-gray-600">{profile?.email}</p>
+            <span className="inline-block mt-1 px-3 py-1 bg-pink-100 text-pink-700 rounded-full text-sm font-medium capitalize">
+              {profile?.role}
+            </span>
           </div>
-        );
-      }
-      default:
-        return <BookingsScreen />;
-    }
+        </div>
+        <button
+          onClick={onLogout}
+          className="w-full py-3 bg-red-50 text-red-600 rounded-lg font-medium hover:bg-red-100 transition-colors"
+        >
+          Sign Out
+        </button>
+      </div>
+    );
   };
+
+  // Clients view component
+  const ClientsView = () => (
+    <div className="text-center py-12">
+      <h2 className="text-xl font-semibold text-gray-900 mb-2">My Clients</h2>
+      <p className="text-gray-600">Client list coming soon...</p>
+    </div>
+  );
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-pink-50 via-white to-purple-50 mobile-layout">
@@ -179,7 +194,7 @@ export function StaffDashboard({ onLogout }: StaffDashboardProps) {
           ].map((tab) => (
             <button
               key={tab.id}
-              onClick={() => setActiveView(tab.id)}
+              onClick={() => handleViewChange(tab.id)}
               className={`px-4 py-2 rounded-full text-sm font-semibold whitespace-nowrap transition-colors ${
                 activeView === tab.id
                   ? 'bg-pink-600 text-white'
@@ -194,7 +209,12 @@ export function StaffDashboard({ onLogout }: StaffDashboardProps) {
 
       {/* Content */}
       <main className="max-w-[1600px] mx-auto px-4 md:px-6 py-4 md:py-8">
-        {renderContent()}
+        <Routes>
+          <Route index element={<BookingsScreen />} />
+          <Route path="clients" element={<ClientsView />} />
+          <Route path="profile" element={<ProfileView />} />
+          <Route path="*" element={<Navigate to="/staff-dashboard" replace />} />
+        </Routes>
       </main>
 
       {/* Mobile Bottom Navigation */}

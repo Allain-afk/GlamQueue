@@ -63,9 +63,15 @@ export function AppointmentDetailsModal({
     }).format(amount);
   }, [appointment?.service_price]);
 
-  if (!isOpen || !appointment) return null;
-
+  // Move useEffect BEFORE the early return to follow Rules of Hooks
   useEffect(() => {
+    // Only load payment details if modal is open and appointment exists
+    if (!isOpen || !appointment) {
+      setPaymentDetails(null);
+      setLoadingPaymentDetails(false);
+      return;
+    }
+
     let cancelled = false;
 
     const load = async () => {
@@ -86,7 +92,9 @@ export function AppointmentDetailsModal({
     return () => {
       cancelled = true;
     };
-  }, [appointment.id]);
+  }, [isOpen, appointment?.id]);
+
+  if (!isOpen || !appointment) return null;
 
   const handleUpdate = async (status: AppointmentWithDetails['status']) => {
     setUpdating(true);

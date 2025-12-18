@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
-import { Calendar, Clock, Search, Filter, Eye, Check, X, MoreHorizontal } from 'lucide-react';
+import { Calendar, Clock, Search, Filter, Eye, Check, X, Trash2 } from 'lucide-react';
 import { getAllAppointments, type AppointmentWithDetails } from '../../api/admin';
-import { adminUpdateBookingStatus } from '../../api/bookings';
+import { adminUpdateBookingStatus, adminDeleteBooking } from '../../api/bookings';
 import { supabase } from '../../lib/supabase';
 import { AdminBookingModal } from '../components/AdminBookingModal';
 import { AppointmentDetailsModal } from '../../components/AppointmentDetailsModal';
@@ -103,6 +103,44 @@ export function AppointmentsScreen() {
     if (!ok) return;
 
     await handleStatusUpdate(id, status);
+  };
+
+  const handleDeleteAppointment = async (id: number) => {
+    const apt = appointments.find(a => a.id === id);
+    const ok = await glamConfirm({
+      title: 'Delete this appointment?',
+      text: apt
+        ? `This will permanently delete the appointment for ${apt.client_name || 'Client'} • ${apt.service_name || 'Service'} • ${new Date(apt.start_at).toLocaleString()}. This action cannot be undone.`
+        : 'This will permanently delete this appointment. This action cannot be undone.',
+      confirmText: 'Yes, delete',
+    });
+
+    if (!ok) return;
+
+    try {
+      setUpdatingIds(prev => ({ ...prev, [id]: true }));
+      await adminDeleteBooking(id);
+      
+      // Remove from local state
+      setAppointments(prev => prev.filter(apt => apt.id !== id));
+      
+      // Close modal if it's open for this appointment
+      if (selectedAppointment?.id === id) {
+        setShowDetailsModal(false);
+        setSelectedAppointment(null);
+      }
+
+      glamSuccess('Appointment deleted successfully');
+    } catch (error) {
+      console.error('Error deleting appointment:', error);
+      glamError(error instanceof Error ? error.message : 'Failed to delete appointment');
+    } finally {
+      setUpdatingIds(prev => {
+        const next = { ...prev };
+        delete next[id];
+        return next;
+      });
+    }
   };
 
   const openDetails = (apt: AppointmentWithDetails) => {
@@ -359,11 +397,12 @@ export function AppointmentsScreen() {
                           <Eye className="w-4 h-4" />
                         </button>
                         <button
-                          onClick={() => openDetails(apt)}
-                          className="p-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
-                          title="More"
+                          onClick={() => void handleDeleteAppointment(apt.id)}
+                          disabled={!!updatingIds[apt.id]}
+                          className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                          title="Delete appointment"
                         >
-                          <MoreHorizontal className="w-4 h-4" />
+                          <Trash2 className="w-4 h-4" />
                         </button>
                       </div>
                     </td>

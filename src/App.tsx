@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback, Suspense, lazy } from 'react';
+import { Routes, Route, useNavigate, useLocation } from 'react-router-dom';
 import { RedesignedLandingPage } from './components/RedesignedLandingPage';
 import { AdminLogin } from './admin/components/AdminLogin';
 import { OtpVerification } from './admin/components/OtpVerification';
@@ -50,12 +51,29 @@ const ClientApp = lazy(() =>
 type AppState = 'landing' | 'login' | 'otp-verification' | 'admin-dashboard' | 'manager-dashboard' | 'staff-dashboard' | 'client-app' | 'onboarding' | 'subscription-required';
 
 function AppContent() {
-  const [appState, setAppState] = useState<AppState>('landing');
+  const navigate = useNavigate();
+  const location = useLocation();
   const [isSignUpMode, setIsSignUpMode] = useState(false);
   const [otpEmail, setOtpEmail] = useState('');
   const [otpPassword, setOtpPassword] = useState('');
   const [selectedPlanType, setSelectedPlanType] = useState<PlanType>('free-trial');
+  const [isCheckingAuth, setIsCheckingAuth] = useState(true);
   const { signOut, session } = useAuth();
+
+  // Helper to get app state from URL path
+  const getAppStateFromPath = (path: string): AppState => {
+    if (path.startsWith('/admin-dashboard')) return 'admin-dashboard';
+    if (path.startsWith('/manager-dashboard')) return 'manager-dashboard';
+    if (path.startsWith('/staff-dashboard')) return 'staff-dashboard';
+    if (path.startsWith('/client-app')) return 'client-app';
+    if (path.startsWith('/login')) return 'login';
+    if (path.startsWith('/otp-verification')) return 'otp-verification';
+    if (path.startsWith('/onboarding')) return 'onboarding';
+    if (path.startsWith('/subscription-required')) return 'subscription-required';
+    return 'landing';
+  };
+
+  const appState = getAppStateFromPath(location.pathname);
 
   // Handle pending subscription stored in localStorage
   const handlePendingSubscription = useCallback(async () => {
@@ -137,11 +155,22 @@ function AppContent() {
   // Check session and redirect based on role (runs when session changes or on mount)
   useEffect(() => {
     const checkSessionAndRedirect = async () => {
+      // Mark that we're checking auth - this prevents showing landing page during check
+      setIsCheckingAuth(true);
+
+      // Wait a bit for session to load from Supabase storage
+      // This prevents the flash when session is being retrieved
+      await new Promise(resolve => setTimeout(resolve, 100));
+
       if (!session?.user) {
-        // If no session and we're on a protected route, go to landing
-        if (appState === 'admin-dashboard' || appState === 'manager-dashboard' || appState === 'staff-dashboard' || appState === 'client-app') {
-          setAppState('landing');
+        // If no session and we're on a protected route, go to landing or login
+        if (appState === 'admin-dashboard' || appState === 'manager-dashboard' || appState === 'staff-dashboard') {
+          // For admin/manager/staff routes, redirect to login page
+          navigate('/login', { replace: true });
+        } else if (appState === 'client-app') {
+          navigate('/', { replace: true });
         }
+        setIsCheckingAuth(false);
         return;
       }
 
@@ -164,35 +193,37 @@ function AppContent() {
             const hasSubscription = await hasActiveSubscription(profile.id);
             if (!hasSubscription) {
               if (appState !== 'subscription-required') {
-                setAppState('subscription-required');
+                navigate('/subscription-required', { replace: true });
               }
             } else {
               if (appState !== 'admin-dashboard') {
-                setAppState('admin-dashboard');
+                navigate('/admin-dashboard', { replace: true });
               }
             }
           } else if (profile.role === 'manager') {
             if (appState !== 'manager-dashboard') {
-              setAppState('manager-dashboard');
+              navigate('/manager-dashboard', { replace: true });
             }
           } else if (profile.role === 'staff') {
             if (appState !== 'staff-dashboard') {
-              setAppState('staff-dashboard');
+              navigate('/staff-dashboard', { replace: true });
             }
           } else {
             // Client role
             if (appState !== 'client-app' && appState !== 'onboarding' && appState !== 'subscription-required') {
-              setAppState('client-app');
+              navigate('/client-app', { replace: true });
             }
           }
         }
       } catch (err) {
         console.error('Error checking session and redirecting:', err);
+      } finally {
+        setIsCheckingAuth(false);
       }
     };
 
     checkSessionAndRedirect();
-  }, [session, handlePendingSubscription]);
+  }, [session, handlePendingSubscription, appState, navigate]);
 
   // Handle auth callback from email confirmation
   useEffect(() => {
@@ -224,16 +255,16 @@ function AppContent() {
               // Check subscription for admin users
               const hasSubscription = await hasActiveSubscription(profile.id);
               if (!hasSubscription) {
-                setAppState('subscription-required');
+                navigate('/subscription-required', { replace: true });
               } else {
-                setAppState('admin-dashboard');
+                navigate('/admin-dashboard', { replace: true });
               }
             } else if (profile.role === 'manager') {
-              setAppState('manager-dashboard');
+              navigate('/manager-dashboard', { replace: true });
             } else if (profile.role === 'staff') {
-              setAppState('staff-dashboard');
+              navigate('/staff-dashboard', { replace: true });
             } else {
-              setAppState('client-app');
+              navigate('/client-app', { replace: true });
             }
           }
         } catch (err) {
@@ -243,22 +274,22 @@ function AppContent() {
     };
 
     handleAuthCallback();
-  }, [session, handlePendingSubscription]);
+  }, [session, handlePendingSubscription, navigate]);
 
   const handleGetStarted = () => {
     console.log('Book Now clicked - Redirecting to sign-up');
     setIsSignUpMode(true);
-    setAppState('login');
+    navigate('/login');
   };
 
   const handleLogin = () => {
     setIsSignUpMode(false);
-    setAppState('login');
+    navigate('/login');
   };
 
   const handleBackToLanding = () => {
     setIsSignUpMode(false);
-    setAppState('landing');
+    navigate('/');
   };
 
   // Check subscription and handle pending subscription after login
@@ -271,22 +302,22 @@ function AppContent() {
       // Check subscription for admin users
       const hasSubscription = await hasActiveSubscription(session.user.id);
       if (!hasSubscription) {
-        setAppState('subscription-required');
+        navigate('/subscription-required', { replace: true });
         return;
       }
-      setAppState('admin-dashboard');
+      navigate('/admin-dashboard', { replace: true });
     } else if (profile.role === 'manager') {
-      setAppState('manager-dashboard');
+      navigate('/manager-dashboard', { replace: true });
     } else if (profile.role === 'staff') {
-      setAppState('staff-dashboard');
+      navigate('/staff-dashboard', { replace: true });
     } else {
-      setAppState('client-app');
+      navigate('/client-app', { replace: true });
     }
   };
 
   const handleClientLogin = () => {
     setIsSignUpMode(false);
-    setAppState('client-app');
+    navigate('/client-app', { replace: true });
   };
 
   const handleOtpVerificationSuccess = async (profile: Profile) => {
@@ -299,168 +330,207 @@ function AppContent() {
       if (session?.user) {
         const hasSubscription = await hasActiveSubscription(session.user.id);
         if (!hasSubscription) {
-          setAppState('subscription-required');
+          navigate('/subscription-required', { replace: true });
           return;
         }
       }
-      setAppState('admin-dashboard');
+      navigate('/admin-dashboard', { replace: true });
     } else if (profile.role === 'manager') {
-      setAppState('manager-dashboard');
+      navigate('/manager-dashboard', { replace: true });
     } else if (profile.role === 'staff') {
-      setAppState('staff-dashboard');
+      navigate('/staff-dashboard', { replace: true });
     } else {
-      setAppState('client-app');
+      navigate('/client-app', { replace: true });
     }
   };
 
   const handleNavigateToOtp = (email: string, password: string) => {
     setOtpEmail(email);
     setOtpPassword(password);
-    setAppState('otp-verification');
+    navigate('/otp-verification', { replace: true });
   };
 
   const handleBackFromOtp = () => {
-    setAppState('login');
+    navigate('/login', { replace: true });
   };
 
   const handleLogout = async () => {
     await signOut();
-    setAppState('landing');
+    navigate('/', { replace: true });
   };
 
   const handleStartOnboarding = (planType: PlanType) => {
     setSelectedPlanType(planType);
-    setAppState('onboarding');
+    navigate('/onboarding', { replace: true });
   };
 
   const handleOnboardingComplete = () => {
     // After onboarding, redirect to sign-up/login
     setIsSignUpMode(true);
-    setAppState('login');
+    navigate('/login', { replace: true });
   };
 
   const handleBackFromOnboarding = () => {
-    setAppState('landing');
+    navigate('/', { replace: true });
   };
 
 
-  switch (appState) {
-    case 'login':
-      return (
-        <AdminLogin 
-          onLoginSuccess={handleLoginSuccess}
-          onClientLogin={handleClientLogin}
-          onBackToLanding={handleBackToLanding}
-          onNavigateToOtp={handleNavigateToOtp}
-          initialMode={isSignUpMode ? 'signup' : 'login'}
-        />
-      );
-    
-    case 'otp-verification':
-      return (
-        <OtpVerification
-          email={otpEmail}
-          password={otpPassword}
-          onVerificationSuccess={handleOtpVerificationSuccess}
-          onBack={handleBackFromOtp}
-        />
-      );
-    
-    case 'admin-dashboard':
-      return (
-        <Suspense fallback={
-          <div className="min-h-screen bg-gradient-to-br from-pink-50 to-purple-50 flex items-center justify-center">
-            <div className="text-center">
-              <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-pink-500 mx-auto mb-4"></div>
-              <p className="text-gray-600 font-medium">Loading dashboard...</p>
-            </div>
-          </div>
-        }>
-          <NewAdminDashboard 
-            onLogout={handleLogout}
-          />
-        </Suspense>
-      );
-    
-    case 'manager-dashboard':
-      return (
-        <Suspense fallback={
-          <div className="min-h-screen bg-gradient-to-br from-pink-50 to-purple-50 flex items-center justify-center">
-            <div className="text-center">
-              <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-pink-500 mx-auto mb-4"></div>
-              <p className="text-gray-600 font-medium">Loading manager dashboard...</p>
-            </div>
-          </div>
-        }>
-          <ManagerDashboard 
-            onLogout={handleLogout}
-          />
-        </Suspense>
-      );
-    
-    case 'staff-dashboard':
-      return (
-        <Suspense fallback={
-          <div className="min-h-screen bg-gradient-to-br from-pink-50 to-purple-50 flex items-center justify-center">
-            <div className="text-center">
-              <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-pink-500 mx-auto mb-4"></div>
-              <p className="text-gray-600 font-medium">Loading staff dashboard...</p>
-            </div>
-          </div>
-        }>
-          <StaffDashboard 
-            onLogout={handleLogout}
-          />
-        </Suspense>
-      );
-    
-    case 'client-app':
-      return (
-        <Suspense fallback={
-          <div className="min-h-screen bg-gradient-to-br from-pink-50 to-purple-50 flex items-center justify-center">
-            <div className="text-center">
-              <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-pink-500 mx-auto mb-4"></div>
-              <p className="text-gray-600 font-medium">Loading app...</p>
-            </div>
-          </div>
-        }>
-          <ClientApp 
-            onBackToLanding={handleBackToLanding}
-            onLogout={handleLogout}
-            onRequireLogin={() => {
-              setIsSignUpMode(true);
-              setAppState('login');
-            }}
-          />
-        </Suspense>
-      );
-    
-    case 'onboarding':
-      return (
-        <OnboardingPaymentScreen
-          planType={selectedPlanType}
-          onBack={handleBackFromOnboarding}
-          onComplete={handleOnboardingComplete}
-        />
-      );
-    
-    case 'subscription-required':
-      return (
-        <SubscriptionRequired
-          onSubscribe={() => handleStartOnboarding('free-trial')}
-          onBack={handleBackToLanding}
-        />
-      );
-    
-    default:
-      return (
-        <RedesignedLandingPage 
-          onGetStarted={handleGetStarted}
-          onLogin={handleLogin}
-          onStartOnboarding={handleStartOnboarding}
-        />
-      );
+  // Show loading screen while checking authentication to prevent landing page flash
+  // This prevents showing the landing page during the initial auth check
+  if (isCheckingAuth) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-pink-50 to-purple-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-pink-500 mx-auto mb-4"></div>
+          <p className="text-gray-600 font-medium">Loading...</p>
+        </div>
+      </div>
+    );
   }
+
+  const LoadingFallback = ({ message }: { message: string }) => (
+    <div className="min-h-screen bg-gradient-to-br from-pink-50 to-purple-50 flex items-center justify-center">
+      <div className="text-center">
+        <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-pink-500 mx-auto mb-4"></div>
+        <p className="text-gray-600 font-medium">{message}</p>
+      </div>
+    </div>
+  );
+
+  return (
+    <Routes>
+      {/* Landing Page */}
+      <Route 
+        path="/" 
+        element={
+          <RedesignedLandingPage 
+            onGetStarted={handleGetStarted}
+            onLogin={handleLogin}
+            onStartOnboarding={handleStartOnboarding}
+          />
+        } 
+      />
+
+      {/* Login Page */}
+      <Route 
+        path="/login" 
+        element={
+          <AdminLogin 
+            onLoginSuccess={handleLoginSuccess}
+            onClientLogin={handleClientLogin}
+            onBackToLanding={handleBackToLanding}
+            onNavigateToOtp={handleNavigateToOtp}
+            initialMode={isSignUpMode ? 'signup' : 'login'}
+          />
+        } 
+      />
+
+      {/* Admin Dashboard - Direct access with nested routes */}
+      <Route 
+        path="/admin-dashboard/*" 
+        element={
+          session?.user ? (
+            <Suspense fallback={<LoadingFallback message="Loading dashboard..." />}>
+              <NewAdminDashboard onLogout={handleLogout} />
+            </Suspense>
+          ) : (
+            <AdminLogin 
+              onLoginSuccess={handleLoginSuccess}
+              onClientLogin={handleClientLogin}
+              onBackToLanding={handleBackToLanding}
+              onNavigateToOtp={handleNavigateToOtp}
+              initialMode="login"
+            />
+          )
+        } 
+      />
+
+      {/* OTP Verification */}
+      <Route 
+        path="/otp-verification" 
+        element={
+          <OtpVerification
+            email={otpEmail}
+            password={otpPassword}
+            onVerificationSuccess={handleOtpVerificationSuccess}
+            onBack={handleBackFromOtp}
+          />
+        } 
+      />
+
+      {/* Manager Dashboard - with nested routes */}
+      <Route 
+        path="/manager-dashboard/*" 
+        element={
+          <Suspense fallback={<LoadingFallback message="Loading manager dashboard..." />}>
+            <ManagerDashboard onLogout={handleLogout} />
+          </Suspense>
+        } 
+      />
+
+      {/* Staff Dashboard - with nested routes */}
+      <Route 
+        path="/staff-dashboard/*" 
+        element={
+          <Suspense fallback={<LoadingFallback message="Loading staff dashboard..." />}>
+            <StaffDashboard onLogout={handleLogout} />
+          </Suspense>
+        } 
+      />
+
+      {/* Client App */}
+      <Route 
+        path="/client-app" 
+        element={
+          <Suspense fallback={<LoadingFallback message="Loading app..." />}>
+            <ClientApp 
+              onBackToLanding={handleBackToLanding}
+              onLogout={handleLogout}
+              onRequireLogin={() => {
+                setIsSignUpMode(true);
+                navigate('/login');
+              }}
+            />
+          </Suspense>
+        } 
+      />
+
+      {/* Onboarding */}
+      <Route 
+        path="/onboarding" 
+        element={
+          <OnboardingPaymentScreen
+            planType={selectedPlanType}
+            onBack={handleBackFromOnboarding}
+            onComplete={handleOnboardingComplete}
+          />
+        } 
+      />
+
+      {/* Subscription Required */}
+      <Route 
+        path="/subscription-required" 
+        element={
+          <SubscriptionRequired
+            onSubscribe={() => handleStartOnboarding('free-trial')}
+            onBack={handleBackToLanding}
+          />
+        } 
+      />
+
+      {/* Catch all - redirect to landing */}
+      <Route 
+        path="*" 
+        element={
+          <RedesignedLandingPage 
+            onGetStarted={handleGetStarted}
+            onLogin={handleLogin}
+            onStartOnboarding={handleStartOnboarding}
+          />
+        } 
+      />
+    </Routes>
+  );
 }
 
 const App: React.FC = () => {

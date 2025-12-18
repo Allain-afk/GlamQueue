@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useNavigate, useLocation, Routes, Route, Navigate } from 'react-router-dom';
 import { Search } from 'lucide-react';
 import { getMyProfile, type Profile } from '../../api/profile';
 import { DashboardScreen } from '../screens/DashboardScreen';
@@ -26,8 +27,9 @@ const tabToNavItem: Record<TabType, ManagerNavItem> = {
 };
 
 export function ManagerDashboard({ onLogout }: ManagerDashboardProps) {
+  const navigate = useNavigate();
+  const location = useLocation();
   const [profile, setProfile] = useState<Profile | null>(null);
-  const [activeTab, setActiveTab] = useState<TabType>('dashboard');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showEditProfile, setShowEditProfile] = useState(false);
@@ -60,6 +62,26 @@ export function ManagerDashboard({ onLogout }: ManagerDashboardProps) {
     }
   };
 
+  // Get active tab from URL path
+  const getActiveTabFromPath = (): TabType => {
+    const path = location.pathname;
+    if (path.includes('/appointments')) return 'appointments';
+    if (path.includes('/clients')) return 'clients';
+    if (path.includes('/staff')) return 'staff';
+    return 'dashboard';
+  };
+
+  const activeTab = getActiveTabFromPath();
+
+  // Handle tab navigation
+  const handleTabChange = (tab: TabType) => {
+    if (tab === 'dashboard') {
+      navigate('/manager-dashboard');
+    } else {
+      navigate(`/manager-dashboard/${tab}`);
+    }
+  };
+
   const tabs = [
     { id: 'dashboard' as TabType, label: 'Dashboard' },
     { id: 'appointments' as TabType, label: 'Appointments' },
@@ -71,27 +93,17 @@ export function ManagerDashboard({ onLogout }: ManagerDashboardProps) {
   const handleMobileNavigate = (item: ManagerNavItem) => {
     switch (item) {
       case 'dashboard':
-        setActiveTab('dashboard');
+        navigate('/manager-dashboard');
         break;
       case 'team':
-        setActiveTab('staff');
+        navigate('/manager-dashboard/staff');
         break;
       case 'reports':
-        setActiveTab('appointments');
+        navigate('/manager-dashboard/appointments');
         break;
       case 'more':
-        setActiveTab('clients');
+        navigate('/manager-dashboard/clients');
         break;
-    }
-  };
-
-  const ActiveScreen = () => {
-    switch (activeTab) {
-      case 'dashboard': return <DashboardScreen />;
-      case 'appointments': return <AppointmentsScreen />;
-      case 'clients': return <ClientsScreen />;
-      case 'staff': return <StaffScreen />;
-      default: return <DashboardScreen />;
     }
   };
 
@@ -188,7 +200,7 @@ export function ManagerDashboard({ onLogout }: ManagerDashboardProps) {
             {tabs.map((tab) => (
               <button
                 key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
+                onClick={() => handleTabChange(tab.id)}
                 className={`px-6 py-4 font-medium text-sm transition-colors relative ${
                   activeTab === tab.id
                     ? 'text-[#FF5A5F]'
@@ -208,25 +220,31 @@ export function ManagerDashboard({ onLogout }: ManagerDashboardProps) {
       {/* Mobile Tabs (so all screens are reachable on phones) */}
       <div className="mobile-only bg-white border-b border-gray-100 px-4 py-3">
         <div className="flex gap-2 overflow-x-auto no-scrollbar">
-          {tabs.map((tab) => (
-            <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
-              className={`px-4 py-2 rounded-full text-sm font-semibold whitespace-nowrap transition-colors ${
-                activeTab === tab.id
-                  ? 'bg-pink-600 text-white'
-                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-              }`}
-            >
-              {tab.label}
-            </button>
-          ))}
+            {tabs.map((tab) => (
+              <button
+                key={tab.id}
+                onClick={() => handleTabChange(tab.id)}
+                className={`px-4 py-2 rounded-full text-sm font-semibold whitespace-nowrap transition-colors ${
+                  activeTab === tab.id
+                    ? 'bg-pink-600 text-white'
+                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                }`}
+              >
+                {tab.label}
+              </button>
+            ))}
         </div>
       </div>
 
       {/* Content */}
       <main className="max-w-[1600px] mx-auto px-4 md:px-6 py-4 md:py-8">
-        <ActiveScreen />
+        <Routes>
+          <Route index element={<DashboardScreen />} />
+          <Route path="appointments" element={<AppointmentsScreen />} />
+          <Route path="clients" element={<ClientsScreen />} />
+          <Route path="staff" element={<StaffScreen />} />
+          <Route path="*" element={<Navigate to="/manager-dashboard" replace />} />
+        </Routes>
       </main>
 
       {/* Mobile Bottom Navigation */}
