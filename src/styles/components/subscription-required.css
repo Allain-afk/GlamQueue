@@ -144,6 +144,53 @@
   border-color: #d1d5db;
 }
 
+.pricing-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 2rem;
+  margin-bottom: 2rem;
+  width: 100%;
+}
+
+.pricing-card {
+  background: white;
+  border: 2px solid #e0e0e0;
+  border-radius: 1rem;
+  padding: 2rem;
+  position: relative;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.pricing-card.disabled {
+  background: #f5f5f5;
+  border-color: #d1d1d1;
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.pricing-card.featured {
+  background: linear-gradient(135deg, #fce7f3 0%, #fbcfe8 100%);
+  border: 3px solid #e91e8c;
+  box-shadow: 0 10px 30px rgba(233, 30, 140, 0.2);
+}
+
+@media (min-width: 769px) {
+  .pricing-card.featured {
+    transform: scale(1.05);
+  }
+}
+
+@media (max-width: 768px) {
+  .pricing-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .pricing-card.featured {
+    transform: none;
+  }
+}
+
 @media (max-width: 640px) {
   .subscription-container {
     padding: 2rem 1.5rem;
@@ -161,6 +208,10 @@
   .btn-secondary {
     width: 100%;
     justify-content: center;
+  }
+
+  .pricing-card {
+    padding: 1.5rem;
   }
 }
 

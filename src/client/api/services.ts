@@ -1,5 +1,6 @@
 import { supabase } from '../../lib/supabase';
 import { getServiceImageUrl } from '../../utils/imageUtils';
+import { getServiceRatings } from './ratings';
 import type { Service, Shop } from '../types';
 
 // Database response types
@@ -166,21 +167,32 @@ export async function getServices(): Promise<Service[]> {
       return mockServices;
     }
     
+    if (!data || data.length === 0) {
+      return [];
+    }
+
+    // Get service IDs to fetch ratings
+    const serviceIds = data.map((s: DatabaseService) => s.id);
+    const serviceRatings = await getServiceRatings(serviceIds);
+    
     // Map database response to client type
-    return (data || []).map((service: DatabaseService) => ({
-      id: service.id,
-      name: service.name,
-      description: service.description || '',
-      price: Number(service.price),
-      duration: service.duration,
-      category: service.category,
-      shop_id: service.shop_id,
-      shop_name: service.shop?.name || '',
-      shop_address: service.shop?.address || '',
-      image_url: getServiceImageUrl(service.image_url, service.name),
-      rating: service.rating ? Number(service.rating) : undefined,
-      created_at: service.created_at,
-    })) as Service[];
+    return (data || []).map((service: DatabaseService) => {
+      const ratingData = serviceRatings[service.id];
+      return {
+        id: service.id,
+        name: service.name,
+        description: service.description || '',
+        price: Number(service.price),
+        duration: service.duration,
+        category: service.category,
+        shop_id: service.shop_id,
+        shop_name: service.shop?.name || '',
+        shop_address: service.shop?.address || '',
+        image_url: getServiceImageUrl(service.image_url, service.name),
+        rating: ratingData ? ratingData.rating : undefined, // Use actual ratings from ratings table
+        created_at: service.created_at,
+      };
+    }) as Service[];
   } catch (err) {
     console.error('Error in getServices:', err);
     // Fallback to mock data on error
@@ -224,6 +236,10 @@ export async function getServiceById(id: string): Promise<Service | null> {
     
     if (!data) return null;
     
+    // Get rating for this service
+    const { getServiceRating } = await import('./ratings');
+    const ratingData = await getServiceRating(id);
+    
     // Map database response to client type
     return {
       id: data.id,
@@ -236,7 +252,7 @@ export async function getServiceById(id: string): Promise<Service | null> {
       shop_name: data.shop?.name || '',
       shop_address: data.shop?.address || '',
       image_url: getServiceImageUrl(data.image_url, data.name),
-      rating: data.rating ? Number(data.rating) : undefined,
+      rating: ratingData ? ratingData.rating : undefined, // Use actual ratings from ratings table
       created_at: data.created_at,
     } as Service;
   } catch (err) {

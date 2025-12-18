@@ -36,20 +36,44 @@ export function ServicesScreen() {
       // Get organization_id for multi-tenancy filtering
       const organizationId = await getCurrentOrganizationId();
       
-      let servicesQuery = supabase
+      // IMPORTANT: If no organization ID, admin should see NO services (not all services)
+      if (!organizationId) {
+        console.warn('[ServicesScreen] No organization ID found - showing empty services');
+        setServices([]);
+        setLoading(false);
+        return;
+      }
+      
+      // Get all branches (shops) owned by this admin's organization
+      // This includes branches owned by the admin AND branches owned by managers in the same organization
+      const { data: shopsData, error: shopsError } = await supabase
+        .from('shops')
+        .select('id')
+        .eq('organization_id', organizationId);
+
+      if (shopsError) throw shopsError;
+
+      // If admin has no branches (including manager-owned branches), show no services
+      if (!shopsData || shopsData.length === 0) {
+        console.log('[ServicesScreen] No branches found for organization (including manager-owned) - showing empty services');
+        setServices([]);
+        setLoading(false);
+        return;
+      }
+
+      // Get shop IDs from all branches in the organization (admin + manager-owned)
+      const allShopIds = shopsData.map(shop => shop.id);
+      
+      // Now fetch services that belong to these branches only
+      // This includes services from admin-owned branches AND manager-owned branches
+      const { data, error } = await supabase
         .from('services')
         .select(`
           *,
           shop:shops(id, name)
         `)
+        .in('shop_id', allShopIds)
         .order('created_at', { ascending: false });
-      
-      // Filter by organization_id if available (multi-tenancy)
-      if (organizationId) {
-        servicesQuery = servicesQuery.eq('organization_id', organizationId);
-      }
-      
-      const { data, error } = await servicesQuery;
 
       if (error) throw error;
 

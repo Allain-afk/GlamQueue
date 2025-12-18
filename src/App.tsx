@@ -512,8 +512,8 @@ function AppContent() {
         path="/subscription-required" 
         element={
           <SubscriptionRequired
-            onSubscribe={() => handleStartOnboarding('free-trial')}
-            onBack={handleBackToLanding}
+            onSubscribe={(planType) => handleStartOnboarding(planType)}
+            onBack={handleLogout}
           />
         } 
       />

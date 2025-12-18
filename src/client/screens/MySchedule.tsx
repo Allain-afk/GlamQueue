@@ -1,18 +1,71 @@
-import { useState } from 'react';
-import { Calendar, Clock, MapPin, CheckCircle, XCircle } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Calendar, Clock, MapPin, CheckCircle, XCircle, Eye, Trash2, Scissors } from 'lucide-react';
 import { useClient } from '../context/ClientContext';
-import { cancelBooking } from '../api/bookings';
+import { cancelBooking, deleteBooking } from '../api/bookings';
 import { glamConfirm, glamError, glamSuccess } from '../../lib/glamAlerts';
-// import type { Booking } from '../types'; // Unused for now
+import { AppointmentDetailsModal } from '../components/AppointmentDetailsModal';
+import { RatingModal } from '../components/RatingModal';
+import { hasRatedBooking } from '../api/ratings';
+import type { Booking } from '../types';
+
+// Component for service image thumbnail with fallback
+function ServiceImageThumbnail({ imageUrl, serviceName }: { imageUrl?: string; serviceName: string }) {
+  const [imageError, setImageError] = useState(false);
+
+  if (!imageUrl || imageError) {
+    return (
+      <div className="w-16 h-16 bg-gradient-to-r from-pink-500 to-pink-600 rounded-xl flex items-center justify-center flex-shrink-0 border border-pink-100">
+        <Scissors className="w-8 h-8 text-white" />
+      </div>
+    );
+  }
+
+  return (
+    <div className="w-16 h-16 rounded-xl overflow-hidden flex-shrink-0 border border-pink-100">
+      <img 
+        src={imageUrl} 
+        alt={serviceName} 
+        className="w-full h-full object-cover"
+        onError={() => setImageError(true)}
+      />
+    </div>
+  );
+}
 
 interface MyScheduleProps {
   onBack: () => void;
+  initialTab?: 'upcoming' | 'history';
+  onBookAgain?: (serviceId: string, shopId: string) => void;
 }
 
-export function MySchedule({ onBack }: MyScheduleProps) {
+export function MySchedule({ onBack, initialTab = 'upcoming', onBookAgain }: MyScheduleProps) {
   const { bookings, upcomingBookings, loading, refreshBookings } = useClient();
-  const [selectedTab, setSelectedTab] = useState<'upcoming' | 'history'>('upcoming');
+  const [selectedTab, setSelectedTab] = useState<'upcoming' | 'history'>(initialTab);
   const [cancellingId, setCancellingId] = useState<string | null>(null);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null);
+  const [showDetailsModal, setShowDetailsModal] = useState(false);
+  const [showRatingModal, setShowRatingModal] = useState(false);
+  const [ratingBooking, setRatingBooking] = useState<Booking | null>(null);
+  const [hiddenBookingIds, setHiddenBookingIds] = useState<Set<string>>(new Set());
+
+  // Load hidden booking IDs from localStorage
+  useEffect(() => {
+    const stored = localStorage.getItem('hiddenBookingIds');
+    if (stored) {
+      try {
+        setHiddenBookingIds(new Set(JSON.parse(stored)));
+      } catch (error) {
+        console.error('Error loading hidden bookings:', error);
+      }
+    }
+  }, []);
+
+  // Save hidden booking IDs to localStorage
+  const saveHiddenBookings = (ids: Set<string>) => {
+    localStorage.setItem('hiddenBookingIds', JSON.stringify(Array.from(ids)));
+    setHiddenBookingIds(ids);
+  };
 
   const handleCancelBooking = async (bookingId: string) => {
     const ok = await glamConfirm({
@@ -61,7 +114,100 @@ export function MySchedule({ onBack }: MyScheduleProps) {
     }
   };
 
-  const displayBookings = selectedTab === 'upcoming' ? upcomingBookings : bookings.filter(b => b.status === 'completed' || b.status === 'cancelled');
+  const handleViewDetails = (booking: Booking) => {
+    setSelectedBooking(booking);
+    setShowDetailsModal(true);
+  };
+
+  const handleRate = async (booking: Booking) => {
+    // Check if already rated
+    try {
+      const alreadyRated = await hasRatedBooking(booking.id);
+      if (alreadyRated) {
+        glamError('You have already rated this appointment');
+        return;
+      }
+    } catch (error) {
+      console.error('Error checking rating:', error);
+      // Continue anyway - let the rating modal handle it
+    }
+    
+    setRatingBooking(booking);
+    setShowRatingModal(true);
+  };
+
+  const handleRatingSubmitted = async () => {
+    // Refresh bookings to update the UI
+    await refreshBookings();
+    // Close rating modal
+    setShowRatingModal(false);
+    setRatingBooking(null);
+    // Refresh the details modal if open to show the new rating
+    // The modal's useEffect will automatically reload the rating when booking.id changes
+    if (selectedBooking && showDetailsModal) {
+      // Force a refresh by updating the booking reference
+      // This will trigger the useEffect in the modal to reload the rating
+      setSelectedBooking({ ...selectedBooking });
+    }
+  };
+
+  const handleRatingComplete = async () => {
+    await handleRatingSubmitted();
+  };
+
+  const handleDeleteBooking = async (bookingId: string) => {
+    const booking = displayBookings.find(b => b.id === bookingId);
+    const ok = await glamConfirm({
+      title: 'Permanently delete this appointment?',
+      text: booking
+        ? `Are you sure you want to permanently delete the appointment for "${booking.service?.name || 'Service'}"? This action cannot be undone and the appointment will be removed from your history.`
+        : 'Are you sure you want to permanently delete this appointment? This action cannot be undone.',
+      confirmText: 'Yes, delete permanently',
+      confirmButtonColor: '#dc2626',
+    });
+    if (!ok) return;
+
+    try {
+      setDeletingId(bookingId);
+      await deleteBooking(bookingId);
+      await refreshBookings();
+      glamSuccess('Appointment deleted permanently');
+      // Close details modal if the deleted booking was open
+      if (selectedBooking?.id === bookingId) {
+        setShowDetailsModal(false);
+        setSelectedBooking(null);
+      }
+    } catch (error) {
+      console.error('Error deleting booking:', error);
+      glamError(error instanceof Error ? error.message : 'Failed to delete appointment');
+    } finally {
+      setDeletingId(null);
+    }
+  };
+
+  const historyBookings = bookings.filter(b => b.status === 'completed' || b.status === 'cancelled');
+  const visibleHistoryBookings = historyBookings.filter(b => !hiddenBookingIds.has(b.id));
+  const displayBookings = selectedTab === 'upcoming' ? upcomingBookings : visibleHistoryBookings;
+
+  const handleDeleteAllHistory = async () => {
+    const historyCount = historyBookings.length;
+    if (historyCount === 0) {
+      glamError('No history to delete');
+      return;
+    }
+
+    const ok = await glamConfirm({
+      title: 'Hide all appointment history?',
+      text: `This will hide all ${historyCount} history items from your view. They will still be accessible to administrators for tracking purposes. You can restore them later if needed.`,
+      confirmText: 'Yes, hide all',
+      confirmButtonColor: '#dc2626',
+    });
+    if (!ok) return;
+
+    const allHistoryIds = new Set(historyBookings.map(b => b.id));
+    saveHiddenBookings(new Set([...hiddenBookingIds, ...allHistoryIds]));
+    glamSuccess('All history items have been hidden');
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-pink-50 via-white to-purple-50">
@@ -81,27 +227,39 @@ export function MySchedule({ onBack }: MyScheduleProps) {
           </div>
 
           {/* Tabs */}
-          <div className="flex gap-4 mt-4">
-            <button
-              onClick={() => setSelectedTab('upcoming')}
-              className={`px-6 py-2 rounded-lg font-medium transition-all ${
-                selectedTab === 'upcoming'
-                  ? 'bg-gradient-to-r from-pink-500 to-pink-600 text-white shadow-md'
-                  : 'text-gray-600 hover:bg-pink-50'
-              }`}
-            >
-              Upcoming ({upcomingBookings.length})
-            </button>
-            <button
-              onClick={() => setSelectedTab('history')}
-              className={`px-6 py-2 rounded-lg font-medium transition-all ${
-                selectedTab === 'history'
-                  ? 'bg-gradient-to-r from-pink-500 to-pink-600 text-white shadow-md'
-                  : 'text-gray-600 hover:bg-pink-50'
-              }`}
-            >
-              History
-            </button>
+          <div className="flex items-center justify-between mt-4">
+            <div className="flex gap-4">
+              <button
+                onClick={() => setSelectedTab('upcoming')}
+                className={`px-6 py-2 rounded-lg font-medium transition-all ${
+                  selectedTab === 'upcoming'
+                    ? 'bg-gradient-to-r from-pink-500 to-pink-600 text-white shadow-md'
+                    : 'text-gray-600 hover:bg-pink-50'
+                }`}
+              >
+                Upcoming ({upcomingBookings.length})
+              </button>
+              <button
+                onClick={() => setSelectedTab('history')}
+                className={`px-6 py-2 rounded-lg font-medium transition-all ${
+                  selectedTab === 'history'
+                    ? 'bg-gradient-to-r from-pink-500 to-pink-600 text-white shadow-md'
+                    : 'text-gray-600 hover:bg-pink-50'
+                }`}
+              >
+                History ({visibleHistoryBookings.length})
+              </button>
+            </div>
+            {selectedTab === 'history' && visibleHistoryBookings.length > 0 && (
+              <button
+                onClick={handleDeleteAllHistory}
+                className="flex items-center gap-2 px-4 py-2 text-sm text-red-600 hover:text-red-700 font-medium hover:bg-red-50 rounded-lg transition-colors"
+                title="Hide all history (still accessible to admin)"
+              >
+                <Trash2 className="w-4 h-4" />
+                Hide All History
+              </button>
+            )}
           </div>
         </div>
       </div>
@@ -133,9 +291,10 @@ export function MySchedule({ onBack }: MyScheduleProps) {
                   <div className="flex items-start justify-between mb-4">
                     <div className="flex-1">
                       <div className="flex items-start gap-4">
-                        <div className="w-16 h-16 bg-gradient-to-r from-pink-500 to-pink-600 rounded-xl flex items-center justify-center flex-shrink-0">
-                          <Calendar className="w-8 h-8 text-white" />
-                        </div>
+                        <ServiceImageThumbnail 
+                          imageUrl={booking.service?.image_url} 
+                          serviceName={booking.service?.name || 'Service'}
+                        />
                         <div className="flex-1">
                           <h3 className="text-lg font-bold text-gray-900 mb-1">
                             {booking.service?.name || 'Service'}
@@ -173,8 +332,9 @@ export function MySchedule({ onBack }: MyScheduleProps) {
                         </p>
                         <p className="text-sm text-gray-600">
                           {new Date(booking.date_time).toLocaleTimeString('en-US', {
-                            hour: '2-digit',
+                            hour: 'numeric',
                             minute: '2-digit',
+                            hour12: true,
                           })}
                         </p>
                       </div>
@@ -199,7 +359,11 @@ export function MySchedule({ onBack }: MyScheduleProps) {
 
                   {booking.status === 'pending' || booking.status === 'confirmed' ? (
                     <div className="flex gap-3">
-                      <button className="flex-1 bg-gradient-to-r from-pink-500 to-pink-600 text-white py-3 rounded-xl font-semibold hover:from-pink-600 hover:to-pink-700 transition-all">
+                      <button
+                        onClick={() => handleViewDetails(booking)}
+                        className="flex-1 flex items-center justify-center gap-2 bg-gradient-to-r from-pink-500 to-pink-600 text-white py-3 rounded-xl font-semibold hover:from-pink-600 hover:to-pink-700 transition-all"
+                      >
+                        <Eye className="w-4 h-4" />
                         View Details
                       </button>
                       <button
@@ -218,9 +382,47 @@ export function MySchedule({ onBack }: MyScheduleProps) {
                       </button>
                     </div>
                   ) : (
-                    <button className="w-full bg-gradient-to-r from-pink-500 to-pink-600 text-white py-3 rounded-xl font-semibold hover:from-pink-600 hover:to-pink-700 transition-all">
-                      Book Again
-                    </button>
+                    <div className="flex gap-3">
+                      <button
+                        onClick={() => handleViewDetails(booking)}
+                        className="flex-1 flex items-center justify-center gap-2 bg-gradient-to-r from-pink-500 to-pink-600 text-white py-3 rounded-xl font-semibold hover:from-pink-600 hover:to-pink-700 transition-all"
+                      >
+                        <Eye className="w-4 h-4" />
+                        View Details
+                      </button>
+                      {(booking.status === 'cancelled' || booking.status === 'completed') && (
+                        <button
+                          onClick={() => handleDeleteBooking(booking.id)}
+                          disabled={deletingId === booking.id}
+                          className="px-4 py-3 border-2 border-red-500 text-red-500 rounded-xl font-semibold hover:bg-red-50 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                          title="Delete permanently"
+                        >
+                          {deletingId === booking.id ? (
+                            <div className="flex items-center gap-2">
+                              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-red-500"></div>
+                              Deleting...
+                            </div>
+                          ) : (
+                            <>
+                              <Trash2 className="w-4 h-4" />
+                              Delete
+                            </>
+                          )}
+                        </button>
+                      )}
+                      {booking.status === 'completed' && booking.service_id && booking.shop_id && (
+                        <button 
+                          onClick={() => {
+                            if (onBookAgain && booking.service_id && booking.shop_id) {
+                              onBookAgain(booking.service_id, booking.shop_id);
+                            }
+                          }}
+                          className="px-6 py-3 border-2 border-pink-500 text-pink-500 rounded-xl font-semibold hover:bg-pink-50 transition-all"
+                        >
+                          Book Again
+                        </button>
+                      )}
+                    </div>
                   )}
                 </div>
               </div>
@@ -228,6 +430,31 @@ export function MySchedule({ onBack }: MyScheduleProps) {
           </div>
         )}
       </div>
+
+      {/* Appointment Details Modal */}
+      <AppointmentDetailsModal
+        isOpen={showDetailsModal}
+        booking={selectedBooking}
+        onClose={() => {
+          setShowDetailsModal(false);
+          setSelectedBooking(null);
+        }}
+        onRate={handleRate}
+        onDelete={(booking) => handleDeleteBooking(booking.id)}
+      />
+
+      {/* Rating Modal */}
+      {showRatingModal && ratingBooking && (
+        <RatingModal
+          isOpen={showRatingModal}
+          booking={ratingBooking}
+          onClose={() => {
+            setShowRatingModal(false);
+            setRatingBooking(null);
+          }}
+          onRated={handleRatingComplete}
+        />
+      )}
     </div>
   );
 }

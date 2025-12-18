@@ -1,7 +1,8 @@
-import { useState } from 'react';
-import { Calendar, Clock, MapPin, ChevronLeft, ChevronRight, Check } from 'lucide-react';
+import { useState, useEffect, useMemo } from 'react';
+import { Calendar, Clock, MapPin, ChevronLeft, ChevronRight, Check, Star } from 'lucide-react';
 import { createBooking } from '../api/bookings';
 import { useClient } from '../context/ClientContext';
+import { supabase } from '../../lib/supabase';
 import type { Service, TimeSlot } from '../types';
 
 interface BookingScreenProps {
@@ -18,18 +19,113 @@ export function BookingScreen({ service, onBack, onBookingComplete }: BookingScr
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [existingBookings, setExistingBookings] = useState<Array<{ start_at: string }>>([]);
+  const [loadingBookings, setLoadingBookings] = useState(false);
 
-  // Generate time slots from 9 AM to 6 PM
+  // Convert 24-hour time to 12-hour format with AM/PM
+  const formatTime12Hour = (hour24: number, minute: number): string => {
+    const period = hour24 >= 12 ? 'PM' : 'AM';
+    const hour12 = hour24 === 0 ? 12 : hour24 > 12 ? hour24 - 12 : hour24;
+    return `${hour12}:${minute.toString().padStart(2, '0')} ${period}`;
+  };
+
+  // Convert 12-hour format back to 24-hour for comparison
+  const parseTime12Hour = (time12: string): { hour: number; minute: number } => {
+    const [time, period] = time12.split(' ');
+    const [hourStr, minuteStr] = time.split(':');
+    let hour = parseInt(hourStr, 10);
+    const minute = parseInt(minuteStr, 10);
+    
+    if (period === 'PM' && hour !== 12) {
+      hour += 12;
+    } else if (period === 'AM' && hour === 12) {
+      hour = 0;
+    }
+    
+    return { hour, minute };
+  };
+
+  // Generate time slots from 9 AM to 6 PM in 12-hour format
   const generateTimeSlots = (): TimeSlot[] => {
     const slots: TimeSlot[] = [];
     for (let hour = 9; hour <= 18; hour++) {
       for (let minute = 0; minute < 60; minute += 30) {
-        const time = `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
-        slots.push({ time, available: true });
+        const time12 = formatTime12Hour(hour, minute);
+        slots.push({ time: time12, available: true });
       }
     }
     return slots;
   };
+
+  // Fetch existing bookings for the selected date, service, and shop
+  useEffect(() => {
+    const fetchExistingBookings = async () => {
+      if (!selectedDate) {
+        setExistingBookings([]);
+        return;
+      }
+
+      try {
+        setLoadingBookings(true);
+        // Get start and end of selected date
+        const startOfDay = new Date(selectedDate);
+        startOfDay.setHours(0, 0, 0, 0);
+        const endOfDay = new Date(selectedDate);
+        endOfDay.setHours(23, 59, 59, 999);
+
+        const { data, error } = await supabase
+          .from('bookings')
+          .select('start_at, service_id, shop_id, status')
+          .eq('service_id', service.id)
+          .eq('shop_id', service.shop_id)
+          .gte('start_at', startOfDay.toISOString())
+          .lte('start_at', endOfDay.toISOString())
+          .in('status', ['pending', 'confirmed']); // Only check active bookings
+
+        if (error) {
+          console.error('Error fetching existing bookings:', error);
+          setExistingBookings([]);
+        } else {
+          setExistingBookings(data || []);
+        }
+      } catch (error) {
+        console.error('Error fetching bookings:', error);
+        setExistingBookings([]);
+      } finally {
+        setLoadingBookings(false);
+      }
+    };
+
+    fetchExistingBookings();
+  }, [selectedDate, service.id, service.shop_id]);
+
+  // Check if a time slot is available
+  const isTimeSlotAvailable = useMemo(() => {
+    return (time12: string): boolean => {
+      if (!selectedDate) return false;
+
+      const now = new Date();
+      const { hour, minute } = parseTime12Hour(time12);
+      
+      // Check if time is in the past
+      const slotDateTime = new Date(selectedDate);
+      slotDateTime.setHours(hour, minute, 0, 0);
+      
+      if (slotDateTime <= now) {
+        return false; // Time is in the past
+      }
+
+      // Check if time conflicts with existing bookings
+      // Check for exact time match (same service, same shop, same date and time)
+      const isBooked = existingBookings.some(booking => {
+        const bookingTime = new Date(booking.start_at);
+        // Check if it's the exact same time (same hour and minute)
+        return bookingTime.getHours() === hour && bookingTime.getMinutes() === minute;
+      });
+
+      return !isBooked;
+    };
+  }, [selectedDate, existingBookings, service.duration]);
 
   const timeSlots = generateTimeSlots();
 
@@ -71,13 +167,26 @@ export function BookingScreen({ service, onBack, onBookingComplete }: BookingScr
       return;
     }
 
+    // Validate time is not in the past
+    const { hour, minute } = parseTime12Hour(selectedTime);
+    const dateTime = new Date(selectedDate);
+    dateTime.setHours(hour, minute, 0, 0);
+    
+    const now = new Date();
+    if (dateTime <= now) {
+      setError('Cannot book appointments in the past. Please select a future time.');
+      return;
+    }
+
+    // Double-check availability before booking
+    if (!isTimeSlotAvailable(selectedTime)) {
+      setError('This time slot is no longer available. Please select another time.');
+      return;
+    }
+
     try {
       setLoading(true);
       setError(null);
-
-      const [hours, minutes] = selectedTime.split(':').map(Number);
-      const dateTime = new Date(selectedDate);
-      dateTime.setHours(hours, minutes, 0, 0);
 
       const booking = await createBooking({
         service_id: service.id,
@@ -89,7 +198,13 @@ export function BookingScreen({ service, onBack, onBookingComplete }: BookingScr
       await refreshBookings();
       onBookingComplete(booking.id);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to create booking');
+      const errorMessage = err instanceof Error ? err.message : 'Failed to create booking';
+      // Check if it's a double booking error
+      if (errorMessage.includes('already exists') || errorMessage.includes('time slot') || errorMessage.includes('conflict')) {
+        setError('This time slot has already been booked. Please select another time.');
+      } else {
+        setError(errorMessage);
+      }
     } finally {
       setLoading(false);
     }
@@ -148,6 +263,13 @@ export function BookingScreen({ service, onBack, onBookingComplete }: BookingScr
                     <Clock className="w-5 h-5 text-pink-500" />
                     <span className="text-gray-900">{service.duration} minutes</span>
                   </div>
+                  {service.rating && (
+                    <div className="flex items-center gap-2 text-sm">
+                      <Star className="w-5 h-5 text-yellow-400 fill-yellow-400" />
+                      <span className="font-semibold text-gray-900">{service.rating.toFixed(1)}</span>
+                      <span className="text-gray-600">rating</span>
+                    </div>
+                  )}
                 </div>
 
                 <div className="pt-4 border-t border-gray-100">
@@ -229,25 +351,43 @@ export function BookingScreen({ service, onBack, onBookingComplete }: BookingScr
             {/* Time Slots */}
             {selectedDate && (
               <div className="bg-white rounded-2xl shadow-sm border border-pink-100 p-6">
-                <h3 className="text-lg font-bold text-gray-900 mb-4">Select Time</h3>
-                <div className="grid grid-cols-4 sm:grid-cols-6 gap-3">
-                  {timeSlots.map((slot) => (
-                    <button
-                      key={slot.time}
-                      onClick={() => setSelectedTime(slot.time)}
-                      disabled={!slot.available}
-                      className={`py-3 px-4 rounded-xl text-sm font-medium transition-all ${
-                        selectedTime === slot.time
-                          ? 'bg-gradient-to-r from-pink-500 to-pink-600 text-white shadow-md'
-                          : slot.available
-                          ? 'bg-pink-50 text-gray-900 hover:bg-pink-100'
-                          : 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                      }`}
-                    >
-                      {slot.time}
-                    </button>
-                  ))}
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-lg font-bold text-gray-900">Select Time</h3>
+                  {loadingBookings && (
+                    <span className="text-sm text-gray-500">Checking availability...</span>
+                  )}
                 </div>
+                <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-3">
+                  {timeSlots.map((slot) => {
+                    const isAvailable = isTimeSlotAvailable(slot.time);
+                    return (
+                      <button
+                        key={slot.time}
+                        onClick={() => {
+                          if (isAvailable) {
+                            setSelectedTime(slot.time);
+                          }
+                        }}
+                        disabled={!isAvailable}
+                        className={`py-3.5 px-4 rounded-xl text-sm font-medium transition-all ${
+                          selectedTime === slot.time
+                            ? 'bg-gradient-to-r from-pink-500 to-pink-600 text-white shadow-md'
+                            : isAvailable
+                            ? 'bg-pink-50 text-gray-900 hover:bg-pink-100 border border-pink-200'
+                            : 'bg-gray-100 text-gray-400 cursor-not-allowed border border-gray-200'
+                        }`}
+                        title={!isAvailable ? 'This time slot is not available' : ''}
+                      >
+                        {slot.time}
+                      </button>
+                    );
+                  })}
+                </div>
+                {existingBookings.length > 0 && (
+                  <p className="mt-4 text-xs text-gray-500 text-center">
+                    {existingBookings.length} appointment{existingBookings.length !== 1 ? 's' : ''} already booked for this date
+                  </p>
+                )}
               </div>
             )}
 
@@ -285,7 +425,7 @@ export function BookingScreen({ service, onBack, onBookingComplete }: BookingScr
                         day: 'numeric',
                         year: 'numeric',
                       })}{' '}
-                      at {selectedTime}
+                      at <span className="font-bold">{selectedTime}</span>
                     </p>
                   </div>
                   <Check className="w-8 h-8 text-green-500" />

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Search, MapPin, Calendar, Scissors, Clock, CheckCircle, XCircle, AlertCircle } from 'lucide-react';
+import { Search, MapPin, Calendar, Scissors, CheckCircle, XCircle, AlertCircle } from 'lucide-react';
 import { useAuth } from '../../auth/useAuth';
 import { useClient } from '../context/ClientContext';
 import { getMyProfile, type Profile } from '../../api/profile';
@@ -35,15 +35,22 @@ interface ClientHomeProps {
   onSelectService: (service: Service) => void;
   onViewAllServices: () => void;
   onViewSchedule: () => void;
+  onViewHistory?: () => void;
   onViewProfile: () => void;
   onLogout: () => void;
 }
 
-export function ClientHome({ onSelectService, onViewAllServices, onViewSchedule, onViewProfile, onLogout }: ClientHomeProps) {
+export function ClientHome({ onSelectService, onViewAllServices, onViewSchedule, onViewHistory, onViewProfile, onLogout }: ClientHomeProps) {
   const { session } = useAuth();
   const { services, bookings, upcomingBookings, loading } = useClient();
   const [searchQuery, setSearchQuery] = useState('');
   const [profile, setProfile] = useState<Profile | null>(null);
+
+  // Filter history bookings (completed or cancelled) and limit to 3
+  const historyBookings = bookings
+    .filter(b => b.status === 'completed' || b.status === 'cancelled')
+    .sort((a, b) => new Date(b.date_time).getTime() - new Date(a.date_time).getTime())
+    .slice(0, 3);
 
   useEffect(() => {
     const loadProfile = async () => {
@@ -115,13 +122,23 @@ export function ClientHome({ onSelectService, onViewAllServices, onViewSchedule,
         {/* Booking History Section */}
         <section>
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-xl font-bold text-gray-900">Booking History</h2>
-            <button
-              onClick={onViewAllServices}
-              className="bg-gradient-to-r from-pink-500 to-pink-600 hover:from-pink-600 hover:to-pink-700 text-white px-4 py-2 rounded-lg font-medium text-sm shadow-md hover:shadow-lg transition-all"
-            >
-              + Book New Service
-            </button>
+            <h2 className="text-xl font-bold text-gray-900">Recent History</h2>
+            <div className="flex items-center gap-3">
+              {historyBookings.length > 0 && (
+                <button
+                  onClick={onViewHistory || onViewSchedule}
+                  className="text-pink-600 hover:text-pink-700 font-medium text-sm"
+                >
+                  View All History
+                </button>
+              )}
+              <button
+                onClick={onViewAllServices}
+                className="bg-gradient-to-r from-pink-500 to-pink-600 hover:from-pink-600 hover:to-pink-700 text-white px-4 py-2 rounded-lg font-medium text-sm shadow-md hover:shadow-lg transition-all"
+              >
+                + Book New Service
+              </button>
+            </div>
           </div>
           
           <div className="bg-white rounded-2xl shadow-sm border border-pink-100 overflow-hidden">
@@ -130,13 +147,13 @@ export function ClientHome({ onSelectService, onViewAllServices, onViewSchedule,
                 <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-pink-500 mx-auto"></div>
                 <p className="text-gray-500 mt-4">Loading your bookings...</p>
               </div>
-            ) : bookings.length === 0 ? (
+            ) : historyBookings.length === 0 ? (
               <div className="text-center py-12 px-4">
                 <div className="w-20 h-20 mx-auto bg-pink-50 rounded-full flex items-center justify-center mb-4">
                   <Calendar className="w-10 h-10 text-pink-400" />
                 </div>
-                <h3 className="text-lg font-semibold text-gray-900 mb-2">No Bookings Yet</h3>
-                <p className="text-gray-500 mb-4">You haven't made any bookings. Start exploring our services!</p>
+                <h3 className="text-lg font-semibold text-gray-900 mb-2">No History Yet</h3>
+                <p className="text-gray-500 mb-4">You haven't completed any appointments yet. Start exploring our services!</p>
                 <button
                   onClick={onViewAllServices}
                   className="bg-gradient-to-r from-pink-500 to-pink-600 hover:from-pink-600 hover:to-pink-700 text-white px-6 py-2 rounded-lg font-medium shadow-md hover:shadow-lg transition-all"
@@ -145,104 +162,89 @@ export function ClientHome({ onSelectService, onViewAllServices, onViewSchedule,
                 </button>
               </div>
             ) : (
-              <div className="overflow-x-auto">
-                <table className="w-full">
-                  <thead className="bg-gradient-to-r from-pink-50 to-purple-50 border-b border-pink-100">
-                    <tr>
-                      <th className="text-left py-4 px-6 font-semibold text-gray-700">Service</th>
-                      <th className="text-left py-4 px-6 font-semibold text-gray-700">Salon</th>
-                      <th className="text-left py-4 px-6 font-semibold text-gray-700">Date & Time</th>
-                      <th className="text-left py-4 px-6 font-semibold text-gray-700">Price</th>
-                      <th className="text-left py-4 px-6 font-semibold text-gray-700">Status</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-pink-50">
-                    {bookings.map((booking) => {
-                      const bookingDate = new Date(booking.date_time);
-                      const isPast = bookingDate < new Date();
-                      
-                      const getStatusIcon = (status: string) => {
-                        switch (status.toLowerCase()) {
-                          case 'completed':
-                            return <CheckCircle className="w-4 h-4 text-green-500" />;
-                          case 'cancelled':
-                            return <XCircle className="w-4 h-4 text-red-500" />;
-                          case 'pending':
-                            return <Clock className="w-4 h-4 text-yellow-500" />;
-                          case 'confirmed':
-                            return <CheckCircle className="w-4 h-4 text-blue-500" />;
-                          default:
-                            return <AlertCircle className="w-4 h-4 text-gray-500" />;
-                        }
-                      };
-                      
-                      const getStatusStyle = (status: string) => {
-                        switch (status.toLowerCase()) {
-                          case 'completed':
-                            return 'bg-green-100 text-green-700 border-green-200';
-                          case 'cancelled':
-                            return 'bg-red-100 text-red-700 border-red-200';
-                          case 'pending':
-                            return 'bg-yellow-100 text-yellow-700 border-yellow-200';
-                          case 'confirmed':
-                            return 'bg-blue-100 text-blue-700 border-blue-200';
-                          default:
-                            return 'bg-gray-100 text-gray-700 border-gray-200';
-                        }
-                      };
-                      
-                      return (
-                        <tr 
-                          key={booking.id} 
-                          className={`hover:bg-pink-50/50 transition-colors ${isPast ? 'bg-gray-50/50' : ''}`}
-                        >
-                          <td className="py-4 px-6">
-                            <div className="flex items-center gap-3">
-                              <ServiceImageThumbnail 
-                                imageUrl={booking.service?.image_url} 
-                                serviceName={booking.service?.name || 'Service'}
-                              />
-                              <div>
-                                <p className="font-medium text-gray-900">{booking.service?.name || 'Service'}</p>
-                                <p className="text-sm text-gray-500">{booking.service?.duration || 0} min</p>
+              <div className="divide-y divide-pink-50">
+                {historyBookings.map((booking) => {
+                  const bookingDate = new Date(booking.date_time);
+                  
+                  const getStatusIcon = (status: string) => {
+                    switch (status.toLowerCase()) {
+                      case 'completed':
+                        return <CheckCircle className="w-4 h-4 text-green-500" />;
+                      case 'cancelled':
+                        return <XCircle className="w-4 h-4 text-red-500" />;
+                      default:
+                        return <AlertCircle className="w-4 h-4 text-gray-500" />;
+                    }
+                  };
+                  
+                  const getStatusStyle = (status: string) => {
+                    switch (status.toLowerCase()) {
+                      case 'completed':
+                        return 'bg-green-100 text-green-700 border-green-200';
+                      case 'cancelled':
+                        return 'bg-red-100 text-red-700 border-red-200';
+                      default:
+                        return 'bg-gray-100 text-gray-700 border-gray-200';
+                    }
+                  };
+                  
+                  return (
+                    <div
+                      key={booking.id}
+                      className="p-4 hover:bg-pink-50/50 transition-colors"
+                    >
+                      <div className="flex items-center gap-4">
+                        <ServiceImageThumbnail 
+                          imageUrl={booking.service?.image_url} 
+                          serviceName={booking.service?.name || 'Service'}
+                        />
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-start justify-between gap-4">
+                            <div className="flex-1 min-w-0">
+                              <h3 className="font-semibold text-gray-900 mb-1 truncate">
+                                {booking.service?.name || 'Service'}
+                              </h3>
+                              <p className="text-sm text-gray-600 mb-2">{booking.shop?.name || 'Salon'}</p>
+                              <div className="flex items-center gap-4 text-sm text-gray-500">
+                                <span>
+                                  {bookingDate.toLocaleDateString('en-US', {
+                                    month: 'short',
+                                    day: 'numeric',
+                                    year: 'numeric'
+                                  })}
+                                </span>
+                                <span>•</span>
+                                <span>
+                                  {bookingDate.toLocaleTimeString('en-US', {
+                                    hour: 'numeric',
+                                    minute: '2-digit',
+                                    hour12: true
+                                  })}
+                                </span>
+                                <span>•</span>
+                                <span className="font-semibold text-pink-600">₱{booking.service?.price || 0}</span>
                               </div>
                             </div>
-                          </td>
-                          <td className="py-4 px-6">
-                            <p className="text-gray-700">{booking.shop?.name || 'Salon'}</p>
-                          </td>
-                          <td className="py-4 px-6">
-                            <div>
-                              <p className="font-medium text-gray-900">
-                                {bookingDate.toLocaleDateString('en-US', {
-                                  weekday: 'short',
-                                  month: 'short',
-                                  day: 'numeric',
-                                  year: 'numeric'
-                                })}
-                              </p>
-                              <p className="text-sm text-gray-500">
-                                {bookingDate.toLocaleTimeString('en-US', {
-                                  hour: '2-digit',
-                                  minute: '2-digit'
-                                })}
-                              </p>
-                            </div>
-                          </td>
-                          <td className="py-4 px-6">
-                            <p className="font-semibold text-pink-600">₱{booking.service?.price || 0}</p>
-                          </td>
-                          <td className="py-4 px-6">
-                            <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium border ${getStatusStyle(booking.status)}`}>
+                            <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium border flex-shrink-0 ${getStatusStyle(booking.status)}`}>
                               {getStatusIcon(booking.status)}
                               {booking.status.charAt(0).toUpperCase() + booking.status.slice(1)}
                             </span>
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+                {bookings.filter(b => b.status === 'completed' || b.status === 'cancelled').length > 3 && (
+                  <div className="p-4 text-center border-t border-pink-100">
+                    <button
+                      onClick={onViewHistory || onViewSchedule}
+                      className="text-pink-600 hover:text-pink-700 font-medium text-sm"
+                    >
+                      View All History ({bookings.filter(b => b.status === 'completed' || b.status === 'cancelled').length} appointments)
+                    </button>
+                  </div>
+                )}
               </div>
             )}
           </div>

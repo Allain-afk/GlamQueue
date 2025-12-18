@@ -1,5 +1,6 @@
 import { supabase } from '../../lib/supabase';
 import type { Booking, BookingStatus } from '../types';
+import { getServiceImageUrl } from '../../utils/imageUtils';
 
 export type ClientPaymentMethod = 'cash' | 'online' | 'visa';
 
@@ -150,6 +151,11 @@ export async function getMyBookings(): Promise<Booking[]> {
     date_time: booking.start_at,
     service_id: String(booking.service_id),
     shop: booking.shop ? { ...booking.shop, id: String(booking.shop.id) } : undefined,
+        service: booking.service ? {
+          ...booking.service,
+          id: String(booking.service.id),
+          image_url: getServiceImageUrl(booking.service.image_url as string | null | undefined, booking.service.name),
+        } : undefined,
   })) as Booking[];
 }
 
@@ -189,6 +195,11 @@ export async function getUpcomingBookings(): Promise<Booking[]> {
     date_time: booking.start_at,
     service_id: String(booking.service_id),
     shop: booking.shop ? { ...booking.shop, id: String(booking.shop.id) } : undefined,
+        service: booking.service ? {
+          ...booking.service,
+          id: String(booking.service.id),
+          image_url: getServiceImageUrl(booking.service.image_url as string | null | undefined, booking.service.name),
+        } : undefined,
   })) as Booking[];
 }
 
@@ -196,6 +207,35 @@ export async function cancelBooking(bookingId: string): Promise<void> {
   const { error } = await supabase
     .from('bookings')
     .update({ status: 'cancelled' })
+    .eq('id', bookingId);
+
+  if (error) throw error;
+}
+
+/**
+ * Permanently delete a booking (client can only delete their own bookings)
+ */
+export async function deleteBooking(bookingId: string): Promise<void> {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) throw new Error('User not authenticated');
+
+  // First verify the booking belongs to the current user
+  const { data: booking, error: fetchError } = await supabase
+    .from('bookings')
+    .select('client_id')
+    .eq('id', bookingId)
+    .single();
+
+  if (fetchError) throw fetchError;
+  if (!booking) throw new Error('Booking not found');
+  if (booking.client_id !== user.id) {
+    throw new Error('You can only delete your own bookings');
+  }
+
+  // Delete the booking
+  const { error } = await supabase
+    .from('bookings')
+    .delete()
     .eq('id', bookingId);
 
   if (error) throw error;

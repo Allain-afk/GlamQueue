@@ -19,6 +19,7 @@ export async function glamConfirm(options: {
   text?: string;
   confirmText: string;
   cancelText?: string;
+  confirmButtonColor?: string;
 }): Promise<boolean> {
   const result = await Swal.fire({
     icon: 'warning',
@@ -39,6 +40,7 @@ export async function glamConfirm(options: {
       cancelButton:
         'px-4 py-2 rounded-lg border border-gray-200 text-gray-700 font-semibold hover:bg-gray-50',
     },
+    confirmButtonColor: options.confirmButtonColor || '#ea580c', // Default orange-600
   });
 
   return result.isConfirmed;

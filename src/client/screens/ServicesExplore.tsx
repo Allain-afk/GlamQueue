@@ -319,6 +319,12 @@ export function ServicesExplore({ onSelectService, onBack }: ServicesExploreProp
                       <span className="text-pink-600 font-bold">₱{salon.price}</span>
                       <span className="text-gray-500 text-sm">{salon.duration} min</span>
                     </div>
+                    {salon.rating && (
+                      <div className="flex items-center gap-1 mb-2">
+                        <Star className="w-4 h-4 text-yellow-400 fill-yellow-400" />
+                        <span className="font-semibold text-sm text-gray-900">{salon.rating.toFixed(1)}</span>
+                      </div>
+                    )}
                     <button
                       onClick={() => onSelectService(salon)}
                       className="w-full bg-gradient-to-r from-pink-500 to-pink-600 text-white px-4 py-2 rounded-lg font-medium text-sm hover:from-pink-600 hover:to-pink-700 transition-all"
@@ -412,6 +418,15 @@ export function ServicesExplore({ onSelectService, onBack }: ServicesExploreProp
                         <p className="text-xs text-gray-500 truncate">{service.shop_address}</p>
                       </div>
                     </div>
+
+                    {/* Rating Display */}
+                    {service.rating && (
+                      <div className="flex items-center gap-1 mb-3">
+                        <Star className="w-4 h-4 text-yellow-400 fill-yellow-400" />
+                        <span className="font-semibold text-sm text-gray-900">{service.rating.toFixed(1)}</span>
+                        <span className="text-xs text-gray-500">rating</span>
+                      </div>
+                    )}
 
                     {/* Spacer to push button to bottom */}
                     <div className="flex-grow"></div>

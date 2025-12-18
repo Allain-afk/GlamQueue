@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { X, MapPin, Loader } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../auth/useAuth';
+import { getCurrentOrganizationId } from '../../api/multiTenancy';
 
 interface Branch {
   id: string;
@@ -71,6 +72,12 @@ export function AddBranchModal({ isOpen, onClose, onBranchSaved, editingBranch }
         throw new Error('You must be logged in to create a branch');
       }
 
+      // Get organization_id to ensure branch belongs to the organization
+      const organizationId = await getCurrentOrganizationId();
+      if (!organizationId) {
+        throw new Error('Organization ID not found. Please ensure you are part of an organization.');
+      }
+
       const branchData = {
         name: formData.name,
         address: formData.address,
@@ -79,7 +86,8 @@ export function AddBranchModal({ isOpen, onClose, onBranchSaved, editingBranch }
         is_open: formData.is_open,
         rating: 0,
         review_count: 0,
-        owner_id: session.user.id, // Set owner_id to current user
+        owner_id: session.user.id, // Set owner_id to current user (admin or manager)
+        organization_id: organizationId, // Set organization_id so admin can see manager-owned branches
       };
 
       if (editingBranch) {

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Plus, MapPin, Phone, DollarSign, TrendingUp, Calendar, Edit, Trash2, Search } from 'lucide-react';
+import { Plus, MapPin, Phone, DollarSign, TrendingUp, Calendar, Edit, Trash2, Search, Star } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { AddBranchModal } from '../components/AddBranchModal';
 import { glamConfirm, glamError, glamSuccess } from '../../lib/glamAlerts';
@@ -49,7 +49,23 @@ export function BranchesScreen() {
         return;
       }
       
+      // Get all managers in the admin's organization (they work for the admin)
+      const { data: managersData, error: managersError } = await supabase
+        .from('profiles')
+        .select('id, email, role')
+        .eq('organization_id', organizationId)
+        .in('role', ['manager', 'admin']);
+
+      if (managersError) {
+        console.error('Error fetching managers:', managersError);
+      }
+
+      console.log('[BranchesScreen] Managers in organization:', managersData?.length || 0);
+      
       // Fetch shops filtered by organization
+      // This includes branches owned by the admin AND branches owned by managers in the same organization
+      // Since managers belong to the same organization, their branches will have the same organization_id
+      // All branches created by managers will now have organization_id set (via AddBranchModal)
       const { data: shopsData, error: shopsError } = await supabase
         .from('shops')
         .select('*')
@@ -122,25 +138,30 @@ export function BranchesScreen() {
   };
 
   const handleDelete = async (id: string) => {
+    const branch = branches.find(b => b.id === id);
     const ok = await glamConfirm({
-      title: 'Delete this branch?',
-      text: 'This will close the branch and may affect related services/bookings.',
-      confirmText: 'Yes, delete',
+      title: 'Permanently delete this branch?',
+      text: branch
+        ? `Are you sure you want to permanently delete "${branch.name}"? This will also delete all associated services and bookings. This action cannot be undone.`
+        : 'Are you sure you want to permanently delete this branch? This will also delete all associated services and bookings. This action cannot be undone.',
+      confirmText: 'Yes, delete permanently',
+      confirmButtonColor: '#dc2626',
     });
     if (!ok) return;
 
     try {
+      // Permanently delete the branch from the database
       const { error } = await supabase
         .from('shops')
-        .update({ is_open: false })
+        .delete()
         .eq('id', id);
 
       if (error) throw error;
-      glamSuccess('Branch deleted');
+      glamSuccess('Branch permanently deleted');
       loadBranches();
     } catch (error) {
       console.error('Error deleting branch:', error);
-      glamError('Failed to delete branch');
+      glamError(error instanceof Error ? error.message : 'Failed to delete branch');
     }
   };
 
@@ -294,17 +315,22 @@ export function BranchesScreen() {
                   <p className="text-sm font-bold text-gray-900">{formatCurrency(branch.monthlySales)}</p>
                   <p className="text-xs text-gray-500">{branch.monthlyBookings} bookings</p>
                 </div>
-                {branch.rating && (
-                  <div>
-                    <div className="flex items-center space-x-2 text-gray-600 mb-1">
-                      <span className="text-xs">Rating</span>
-                    </div>
-                    <p className="text-sm font-bold text-gray-900">
-                      {branch.rating.toFixed(1)} ⭐
-                    </p>
-                    <p className="text-xs text-gray-500">{branch.review_count || 0} reviews</p>
+                <div>
+                  <div className="flex items-center space-x-2 text-gray-600 mb-1">
+                    <Star className="w-4 h-4 text-yellow-400 fill-yellow-400" />
+                    <span className="text-xs">Rating</span>
                   </div>
-                )}
+                  <p className="text-sm font-bold text-gray-900">
+                    {branch.rating && branch.rating > 0 ? (
+                      <>
+                        {branch.rating.toFixed(1)} ⭐
+                      </>
+                    ) : (
+                      <span className="text-gray-400">No ratings yet</span>
+                    )}
+                  </p>
+                  <p className="text-xs text-gray-500">{branch.review_count || 0} review{branch.review_count !== 1 ? 's' : ''}</p>
+                </div>
               </div>
             </div>
           ))}
